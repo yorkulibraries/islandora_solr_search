@@ -3,6 +3,6 @@ description = Example Code for Implementation of Islandora Solr Search Configura
 dependencies[] = islandora_solr_search
 description = Customizes Islandora solr search
 package = Islandora Search
-version = 6.x-12.1.0
+version = 6.x-12.2.0-RC1
 core = 6.x
 
