@@ -2,5 +2,5 @@ name = Islandora Solr display profiles
 description = Display profiles for Islandora Solr. (Grid, Table and CSV)
 dependencies[] = islandora_solr
 package = Islandora Search
-version = 7.x-dev
+version = 7.x-12.1.0-RC1
 core = 7.x
