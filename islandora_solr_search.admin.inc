@@ -31,11 +31,12 @@ function islandora_solr_admin_settings(&$form_state) {
   $handler = !empty($form_state['values']['islandora_solr_search_block_request_handler']) ? $form_state['values']['islandora_solr_search_block_request_handler'] : variable_get('islandora_solr_search_block_request_handler', 'standard');
   $solr_url = !empty($form_state['values']['islandora_solr_search_block_url']) ? $form_state['values']['islandora_solr_search_block_url'] : variable_get('islandora_solr_search_block_url', 'localhost:8080/solr');
   $solr_avail = solr_available($solr_url);
+  $dismax_allowed = FALSE;
   if ($solr_avail) {
     $handlers = get_handlers($solr_url);
+    $dismax_allowed = check_dismax($solr_url, $handler);
   }
 
-  $dismax_allowed = check_dismax($solr_url, $handler);
   $confirmation_message = ($solr_avail ? '<img src="' . url('misc/watchdog-ok.png') . '"/>'
           . t('Successfully connected to Solr server at !islandora_solr_search_block_url', array('!islandora_solr_search_block_url' => $solr_url)) : '<img src="'
           . url('misc/watchdog-error.png') . '"/> '
@@ -279,6 +280,46 @@ function islandora_solr_admin_settings(&$form_state) {
   );
   $form['facet_settings']['islandora_facet_display_table'] = array();  
   
+  $form['facet_settings']['facet_dates'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date facets'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Date field'),
+    '#description' => t("Indicate which date field will appear in the <strong>Islandora Facet Block</strong>.<br />
+      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.date ~ Date</strong> "),
+    '#default_value' => variable_get('islandora_solr_facet_date' , NULL),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_start'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date start'),
+    '#description' => t('The lower bound for the first date range for all Date Faceting on this field. This should be a single date expression which may use the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_start' , 'NOW/YEAR-20YEARS'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_end'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date end'),
+    '#description' => t('The minimum upper bound for the last date range for all Date Faceting on this field. This should be a single date expression which may use the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_end' , 'NOW'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_gap'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date gap'),
+    '#description' => t('The size of each date range expressed as an interval to be added to the lower bound using the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_gap' , '+1YEAR'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_format'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date format'),
+    '#description' => t('The format of the date as it will be displayed in the facet block. Use the <a href="!url">PHP date()</a> formatting.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_format' , 'Y'),
+  );
+  
+  
+  
   
   
   $form['advanced_search_block'] = array(
@@ -469,10 +510,7 @@ function solr_available($solr_url) {
   curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
   $response = curl_exec($handle);
   $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-  $retval = TRUE;
-  if ($httpCode % 100 == 4) { //FIXME:  Should probably deal with 500 errors as well?
-    $retval = FALSE;
-  }
+  $retval = ((int)($httpCode / 100) === 2);
   curl_close($handle);
   return $retval;
 }
