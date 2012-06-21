@@ -277,10 +277,7 @@ class IslandoraSolrResults {
     
     // parameters set in url
     $params = $solrQueryProcessor->internalSolrParams;
-    // set filter key if there are no filters included
-    if (empty($params['f'])) {
-      $params['f'] = array();
-    }
+
     
     // Get Query values
     if (!in_array($solrQueryProcessor->solrQuery, $solrQueryProcessor->different_kinds_of_nothing)) {
@@ -348,9 +345,9 @@ class IslandoraSolrResults {
           $filter_str = trim($filter_str, '[');
           $filter_str = trim($filter_str, ']');
           $filter_array = explode(' TO ', $filter_str);
-          $filter_split[1] = date($format, strtotime(trim($filter_array[0])) + (60 * 60 * 24)) . ' - ' . date($format, strtotime(trim($filter_array[1])) + (60 * 60 * 24));
+          $filter_split[1] = format_date(strtotime(trim($filter_array[0])) + (60 * 60 * 24), 'custom', $format) . ' - ' . format_date(strtotime(trim($filter_array[1])) + (60 * 60 * 24), 'custom', $format);
         }
-        
+
         // pull out filter (for exclude link)
         $query_minus = array();
         $f_x['f'] = array_diff($params['f'], array($filter));
@@ -358,6 +355,10 @@ class IslandoraSolrResults {
         // resetting the filter key's order // @TODO find a cleaner way to do this.
         if ($query_minus['f']) {
           $query_minus['f'] = array_merge(array(), $query_minus['f']);
+        }
+        // remove 'f' if empty
+        if (empty($query_minus['f'])) {
+          unset($query_minus['f']);
         }
 
         // set attributes variable for remove link
@@ -432,9 +433,9 @@ class IslandoraSolrResults {
           $filter_str = trim($filter_str, '[');
           $filter_str = trim($filter_str, ']');
           $filter_array = explode(' TO ', $filter_str);
-          $filter_split[1] = date($format, strtotime(trim($filter_array[0])) + (60 * 60 * 24)) . ' - ' . date($format, strtotime(trim($filter_array[1])) + (60 * 60 * 24));
+          $filter_split[1] = format_date(strtotime(trim($filter_array[0])) + (60 * 60 * 24), 'custom', $format) . ' - ' . format_date(strtotime(trim($filter_array[1])) + (60 * 60 * 24), 'custom', $format);
         }
-       
+
         // increment filter array with current filter (for breadcrumb link)
         $query = array();
         $query_diff = array_diff($params, array('f' => array()));
@@ -449,7 +450,11 @@ class IslandoraSolrResults {
         if ($query_x['f']) {
           $query_x['f'] = array_merge(array(), $query_x['f']);
         }
-
+        // remove 'f' if empty
+        if (empty($query_x['f'])) {
+          unset($query_x['f']);
+        }
+        
         // set attributes variable
         $attr = array();
         // set title
@@ -475,7 +480,7 @@ class IslandoraSolrResults {
         // create links
         // we're not using l() because of active classes: http://drupal.org/node/41595
         $breadcrumb[] = '<a' . drupal_attributes($attr) . '>' . $filter_split[1] . '</a>'
-              . '<span class="islandora_solr_search_breadcrumb_super">(<a' . drupal_attributes($attr_x) . '>' . t('x') . '</a>)</span>';
+              . '<span class="islandora_solr_search_breadcrumb_super"> <a' . drupal_attributes($attr_x) . '>(' . t('x') . ')</a></span>';
 
       }
 
@@ -495,7 +500,10 @@ class IslandoraSolrResults {
       // remove button keeps all parameters (query gets removed instead)
       $query_x = array();
       $query_x = $params;
-
+      if (empty($params['f'])) {
+        unset($query_x['f']);
+      }
+      
       // remove query from path
       $path_x = implode('/', explode('/', $path, -1)) . '/ ';
       
@@ -634,7 +642,7 @@ class IslandoraSolrResults {
           // set date range filter for facet url
           $date_facets[$key][$date]['range'] = '[' . $date . ' TO ' . $date_next . ']';
           // set formatted value for facet link
-          $date_facets[$key][$date]['value'] = date($format, strtotime($date) + (60 * 60 * 24)) . ' - ' . date($format, strtotime($date_next) + (60 * 60 * 24));
+          $date_facets[$key][$date]['value'] = format_date(strtotime(trim($date)) + (60 * 60 * 24), 'custom', $format) . ' - ' . format_date(strtotime(trim($date_next)) + (60 * 60 * 24), 'custom', $format);
         }
       }
     }
