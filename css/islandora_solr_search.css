@@ -85,12 +85,46 @@ img.islandora_solr_secondary_display_icon {
   vertical-align: bottom;
 }
 
+.item-list ul.islandora-solr-search-secondary li
+{
+  display: inline-block;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+  background-image: none; 
+}
+
+
+.item-list ul.islandora-solr-search-limit.horizontal li a
+{
+  float: left;
+  line-height: 12px;
+}
+
+.item-list ul.islandora-solr-search-limit.horizontal li
+{
+  display: inline-block;
+  background-image: none;
+  margin: 0;
+  padding: 0 6px 0 3px;
+  border-right: 1px solid #494949;
+}
+
+.item-list ul.islandora-solr-search-limit.horizontal li.last
+{
+  border-right: 0;
+}
+
 html.js .refresh-button {
   display: none;
 }
 
 .strikethrough {
   text-decoration: line-through !important;
+}
+
+#islandora-solr-top
+{
+  min-height: 25px;
 }
 
 /* hide the 2nd list if a facet list is split in two */
@@ -111,4 +145,237 @@ html.js .refresh-button {
 #solr_facet_table .form-item
 {
   white-space: normal;
+}
+
+/*
+ * Thumbnails float optionally to the left or right of descriptive lists.
+ */
+
+.solr-thumb img {
+  max-width: 100%;
+  *width: 100%;
+  border: 1px solid #ccc;
+}
+
+dl.solr-thumb {
+  float: left;
+  width: 15%;
+  margin: 1.5em auto;
+}
+
+.solr-thumb dt,
+.solr-thumb dd {
+  margin: 0;
+}
+
+/*
+ * These rules will display DTs/DDs as columns.
+ * Constructs must follow a key/value pair pattern.
+ * The three last declarations are meant to kill white space between DTs/DDs 
+ * (result of inline-block styling)
+ */
+dl.solr-fields {
+  float: right;
+  width:83%;
+  margin: 1.5em auto;
+  letter-spacing:-0.34em;
+  *letter-spacing:normal;
+  word-spacing:-0.44em;
+  border-top:3px solid #ddd;
+} 
+
+/*
+ * The width + left/right padding of DTs/DDs equals 88% when compensating for an image
+ */
+.solr-fields dt {
+  margin-right:-1px;
+  width:22.5%;
+  font-weight: bold;
+}
+
+.solr-fields dd {
+  width:67%;
+}
+
+/* 
+ * In this rule, we reset the white-space (see hack above)
+ */
+.solr-fields dt,
+.solr-fields dd {
+  display:inline-block;
+  *display:inline;
+  zoom:1;
+  letter-spacing:normal;
+  word-spacing:normal;
+  vertical-align:top;
+  padding:6px 2% 4px;
+  margin:0;
+  border-top:1px solid #ddd;
+ -ms-word-break: break-all;
+     word-break: break-all;
+     word-break: break-word; /* webkit */
+-webkit-hyphens: auto;
+   -moz-hyphens: auto;
+        hyphens: auto;
+}
+
+.solr-fields dt.first,
+.solr-fields dd.first {
+  border-top: 0;
+}
+
+
+
+
+/* Date filters */
+
+.islandora_solr_search_date_filter label
+{
+  display: inline-block;  
+}
+
+.islandora_solr_search_date_filter input,
+.islandora_solr_search_range_slider input
+{
+  float: right;  
+}
+
+.islandora_solr_search_date_filter form,
+.islandora_solr_search_range_slider form
+{
+  float: left;
+  width: 100%;
+}
+
+.islandora_solr_search_date_filter .description
+{
+  font-size: 0.85em;
+}
+
+.islandora_solr_search_date_filter .date-range-expanded-wrapper
+{
+  
+}
+
+.islandora_solr_search_date_filter .date-range-collapsed-wrapper
+{
+
+}
+
+.islandora_solr_search_date_filter .date-range-filter-wrapper
+{
+  
+}
+table.ui-datepicker tbody td.ui-datepicker-current-day a
+{
+  background: yellow;
+}
+
+table.ui-datepicker tbody td.ui-datepicker-today a
+{
+  background: #cbe5fc;
+}
+
+.islandora_solr_search_range_slider .ui-slider
+{
+  height: 2px;
+  border: 0px;
+  background: #ccc;
+  margin-bottom: 20px;
+}
+
+.islandora_solr_search_range_slider .ui-slider-range
+{
+  background: #edc240;
+  height: 1px;
+}
+
+.islandora_solr_search_date_filter .form-item label
+{
+  display: inline-block;
+}
+
+.islandora_solr_search_range_slider .ui-state-default,
+.islandora_solr_search_range_slider .ui-widget-content .ui-state-default,
+.islandora_solr_search_range_slider .ui-slider-handle
+{
+  background: url('../images/slider-handle.png') top center no-repeat transparent;
+  border: 0px;
+  top: 2px; 
+  cursor: pointer;
+}
+
+.islandora_solr_search_range_slider .ui-slider-handle:hover {
+  background: url('../images/slider-handle.png') top center no-repeat transparent;
+  border: 0px;
+  top: 2px;
+}
+
+.islandora_solr_search_range_slider .date-range-slider-canvas-wrapper
+{
+
+}
+
+.islandora_solr_search_range_slider .range-slider-fromto
+{
+  text-align: center;
+}
+
+.islandora_solr_search_range_slider .date-range-slider-gap
+{
+  text-align: center;
+}
+
+
+#ui-datepicker-div {
+  z-index: 9999; /*must have*/
+}
+
+.slider-popup-from-wrapper,
+.slider-popup-to-wrapper
+{
+  display: none;
+  
+  position: absolute;
+  width: 120px;
+  top: -40px;
+  left: 50%;
+  margin-left: -60px;
+  text-align: center;
+}
+
+.slider-popup-from,
+.slider-popup-to
+{
+  padding: 0px 10px 1px 10px;
+  
+  font-size: 11px;
+  color: #333;
+  
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px 10px 10px 10px;
+}
+
+#range-slider-tooltip
+{
+  display: none;
+  position: absolute;
+  width: 250px;
+
+  text-align: center;
+  z-index: 9999;
+}
+
+#range-slider-tooltip span
+{
+  padding: 0px 10px 1px 10px;
+
+  
+  font-size: 11px;
+  color: #333;
+  
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px 10px 10px 10px;
 }

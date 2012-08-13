@@ -12,26 +12,30 @@
  * @return array
  */
 function islandora_solr_admin_settings(&$form_state) {
-
   //checks for existence of PHP Solr client.
-  module_load_include('php', 'islandora_solr_search', 'SolrPhpClient/Apache/Solr/Service');
+  if (module_exists('apachesolr')) {
+    module_load_include('php', 'apachesolr', 'SolrPhpClient/Apache/Solr/Service');
+  }
+  else {
+    module_load_include('php', 'islandora_solr_search', 'SolrPhpClient/Apache/Solr/Service');
+  }
   if (!class_exists('Apache_Solr_Service')) {
     $message = t('This module requires the !url. Please install the client directory in the root directory of this module before continuing.', array('!url' => l(t('Apache Solr php client'), 'http://code.google.com/p/solr-php-client')));
     drupal_set_message(check_plain($message));
     return;
   }
 
-  drupal_add_js(drupal_get_path('module', 'islandora_solr_search') . '/js/solr_table.js');
   $handlers['standard'] = 'standard';
 
   $handler = !empty($form_state['values']['islandora_solr_search_block_request_handler']) ? $form_state['values']['islandora_solr_search_block_request_handler'] : variable_get('islandora_solr_search_block_request_handler', 'standard');
   $solr_url = !empty($form_state['values']['islandora_solr_search_block_url']) ? $form_state['values']['islandora_solr_search_block_url'] : variable_get('islandora_solr_search_block_url', 'localhost:8080/solr');
   $solr_avail = solr_available($solr_url);
+  $dismax_allowed = FALSE;
   if ($solr_avail) {
     $handlers = get_handlers($solr_url);
+    $dismax_allowed = check_dismax($solr_url, $handler);
   }
 
-  $dismax_allowed = check_dismax($solr_url, $handler);
   $confirmation_message = ($solr_avail ? '<img src="' . url('misc/watchdog-ok.png') . '"/>'
           . t('Successfully connected to Solr server at !islandora_solr_search_block_url', array('!islandora_solr_search_block_url' => $solr_url)) : '<img src="'
           . url('misc/watchdog-error.png') . '"/> '
@@ -87,30 +91,23 @@ function islandora_solr_admin_settings(&$form_state) {
   );
 
 
-  $form['solr_namespace_restriction'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Limit results to namespace'),
-    '#size' => 5,
-    '#default_value' => variable_get('solr_namespace_restriction', ''),
-    '#description' => t("Enter a namespace ie 'demo' to restrict results to PIDs within that namespace."),
+  $form['display_profiles'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Display profiles'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
   );
-
-
-  $form['advanced_button'] = array(
-    '#type' => 'button',
-    '#value' => 'Show Full Table',
-    '#attributes' => array('class' => 'show_table_button', 'id' => 'table_button_id'),
+  // set the table form items
+  $form['display_profiles']['islandora_solr_primary_display_table'] = array(
+    '#tree' => TRUE, // this attribute is important to return the submitted values in a deeper nested arrays in
   );
-
+  
+  
   // get the table settings
   $primary_display_array = variable_get('islandora_solr_primary_display_table', array());
   $enabled = array();
 
-  // set the table form items
-  $form['islandora_solr_primary_display_table'] = array(
-    '#tree' => TRUE, // this attribute is important to return the submitted values in a deeper nested arrays in
-  );
-
+  // get all defined primary displays
   $profiles = module_invoke_all("islandora_solr_primary_display");
 
   if (!empty($profiles)) {
@@ -142,34 +139,33 @@ function islandora_solr_admin_settings(&$form_state) {
     }
 
 
-
     // table loop
     foreach ($profiles_sorted as $machine_name => $profile) {
 
       $options[$machine_name] = '';
 
-      $form['islandora_solr_primary_display_table']['name'][$machine_name] = array(
+      $form['display_profiles']['islandora_solr_primary_display_table']['name'][$machine_name] = array(
         '#value' => $profile['name'],
       );
-      $form['islandora_solr_primary_display_table']['machine_name'][$machine_name] = array(
+      $form['display_profiles']['islandora_solr_primary_display_table']['machine_name'][$machine_name] = array(
         '#value' => $machine_name,
       );
-      $form['islandora_solr_primary_display_table']['weight'][$machine_name] = array(
+      $form['display_profiles']['islandora_solr_primary_display_table']['weight'][$machine_name] = array(
         '#type' => 'weight',
         '#default_value' => ($primary_display_array['weight'][$machine_name]) ? $primary_display_array['weight'][$machine_name] : 0,
         '#attributes' => array('class' => 'solr-weight'),
       );
-      $form['islandora_solr_primary_display_table']['configuration'][$machine_name] = array(
+      $form['display_profiles']['islandora_solr_primary_display_table']['configuration'][$machine_name] = array(
         '#value' => (isset($profile['configuration']) AND $profile['configuration'] != '') ? l(t('configure'), $profile['configuration']) : '',
       );
     }
 
-    $form['islandora_solr_primary_display_table']['default'] = array(
+    $form['display_profiles']['islandora_solr_primary_display_table']['default'] = array(
       '#type' => 'radios',
       '#options' => $options,
       '#default_value' => variable_get('islandora_solr_primary_display', 'default'),
     );
-    $form['islandora_solr_primary_display_table']['enabled'] = array(
+    $form['display_profiles']['islandora_solr_primary_display_table']['enabled'] = array(
       '#type' => 'checkboxes',
       '#options' => $options,
       '#default_value' => (!empty($primary_display_array)) ? $primary_display_array['enabled'] : $primary_display_array, // $primary_display_array['enabled'][$machine_name]
@@ -183,7 +179,7 @@ function islandora_solr_admin_settings(&$form_state) {
   }
 
   if (!empty($islandora_solr_secondary_display_options)) {
-    $form['islandora_solr_secondary_display'] = array(
+    $form['display_profiles']['islandora_solr_secondary_display'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Secondary Display Profiles'),
       '#options' => $islandora_solr_secondary_display_options,
@@ -198,44 +194,30 @@ function islandora_solr_admin_settings(&$form_state) {
     '#value' => $dismax_allowed,
   );
 
-  $form['islandora_solr_search_block_repeat'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Search Field Repetition'),
-    '#size' => 5,
-    '#description' => t('The number of fields you would like to have appear in the <strong>Solr Advanced Search Block</strong>'),
-    '#default_value' => variable_get('islandora_solr_search_block_repeat', '3'),
-  );
 
-  $form['sort_fields'] = array(
+  // Display settings
+  $form['default_display_settings'] = array(
     '#type' => 'fieldset',
+    '#title' => t('Default display settings'),
     '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
   );
-
-  $form['sort_fields']['islandora_solr_search_sort_field'] = array(
-    '#type' => 'textfield', '#title' => t('Sort field'),
-    '#size' => 20,
-    '#description' => t('Results will be sorted on this field. If left blank will default to <em>score</em>.'),
-    '#default_value' => variable_get('islandora_solr_search_sort_field', ''),
-  );
-
-  $form['sort_fields']['islandora_solr_search_sort_order'] = array(
-    '#type' => 'radios',
-    '#title' => t('Sort Order'),
-    '#options' => array('asc' => t('Ascending'), 'desc' => t('Decending')),
-    '#default_value' => 'desc',
-  );
-
-  $form['islandora_solr_searchterms'] = array(
+  $form['default_display_settings']['islandora_solr_search_result_fields'] = array(
     '#type' => 'textarea',
-    '#title' => t('Search Terms'),
-    '#description' => t("Indicate what fields should appear in the dropdown menu of terms for the <strong>Solr Advanced Search Block</strong>.<br />
-      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.title ~ Title</strong><br />
-      Review the schema.xml to see what terms are available. A list of the fields available when using the schema.xml packaged with the Islandora Solr
-      module is available in Islandora's online documentation."),
-    '#default_value' => variable_get('islandora_solr_searchterms', 'dc.title ~ Title'),
+    '#title' => t('Labels for Returned Fields'),
+    '#description' => t('Set labels for fields returned from query.
+      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.title ~ Title</strong>'),
+    '#default_value' => variable_get('islandora_solr_search_result_fields', 'dc.subject ~ Subject,dc.type ~ Type'),
     '#wysiwyg' => FALSE,
   );
-  $form['islandora_solr_snippet_field'] = array(
+  $form['default_display_settings']['islandora_solr_search_limit_result_fields'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Limit results to fields listed above?'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('islandora_solr_search_limit_result_fields', 0),
+    '#description' => t('If checked, results displayed will be limited to the fields specified above.<br/><strong>Note:</strong> Some display profiles may not honour this value.'),
+  );
+  $form['default_display_settings']['islandora_solr_snippet_field'] = array(
     '#type' => 'textfield',
     '#title' => t('Snippet Field'),
     '#default_value' => variable_get('islandora_solr_snippet_field', ''),
@@ -245,8 +227,63 @@ function islandora_solr_admin_settings(&$form_state) {
       <strong>Note:</strong><em> This feature is not supported by all display profiles.</em> "),
     '#wysiwyg' => FALSE,
   );
+  $form['default_display_settings']['islandora_solr_search_num_of_results'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Results per page'),
+    '#size' => 5,
+    '#description' => t('The number of results to show per page.'),
+    '#default_value' => variable_get('islandora_solr_search_num_of_results', '25'),
+  );
+  $form['default_display_settings']['exposed_limit'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Exposed results per page'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['default_display_settings']['exposed_limit']['islandora_solr_search_limit_results_exposed'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Exposed results per page'),
+    '#default_value' => variable_get('islandora_solr_search_limit_results_exposed', '10, 25, 50, 100'),
+    '#description' => t("Comma separated values (integers) to expose links in a block which provides the user the ability to limit search results manually.<br />
+    <strong>Note:</strong><em> Some display profiles might override this value.</em> "),
+    '#wysiwyg' => FALSE,
+  );
+  $form['default_display_settings']['exposed_limit']['islandora_solr_search_limit_results_exposed_styling'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Horizontal styling'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('islandora_solr_search_limit_results_exposed_styling', 0),
+    '#description' => t('Styles the exposed result limit links horizontally with separators.'),
+  );
+  
+  
+  // Sort
+  $form['sort'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Sort'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['sort']['islandora_solr_search_sort_terms'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Sort terms'),
+    '#description' => t("Indicate what fields should appear in the <strong>Islandora sort block</strong>.<br />
+      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.title ~ Title</strong><br />
+      Review the schema.xml to see what terms are available. A list of the fields available when using the schema.xml packaged with the Islandora Solr
+      module is available in Islandora's online documentation. <br /><strong>Important:</strong> Not all solr fields can be used for sorting. For more info, check the <a href='!sorturl' target='_blank'>solr documentation</a> on sorting.", array('!sorturl' => 'http://wiki.apache.org/solr/CommonQueryParameters#sort')),
+    '#default_value' => variable_get('islandora_solr_search_sort_terms', 'score ~ Relevance, PID ~ PID'),
+    '#wysiwyg' => FALSE,
+  );
+  
 
-  $form['islandora_solr_search_block_facets'] = array(
+  // Facets
+  $form['facet_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Facet settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['facet_settings']['islandora_solr_search_block_facets'] = array(
     '#type' => 'textarea',
     '#title' => t('Facet Fields'),
     '#default_value' => variable_get('islandora_solr_search_block_facets', ''),
@@ -254,42 +291,23 @@ function islandora_solr_admin_settings(&$form_state) {
       Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.title ~ Title</strong> "),
     '#default_value' => variable_get('islandora_solr_search_block_facets', 'dc.subject ~ Subject,dc.type ~ Type'),
     '#wysiwyg' => FALSE,
-    '#default_value' => variable_get('islandora_solr_search_block_facets', t('dc.subject ~ Subject,dc.type ~ Type'))
+    '#default_value' => variable_get('islandora_solr_search_block_facets', 'dc.subject ~ Subject,dc.type ~ Type')
   );
-
-  $form['islandora_solr_search_result_fields'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Labels for Returned Fields'),
-    '#description' => t('Set labels for fields returned from query.
-      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.title ~ Title</strong>'),
-    '#default_value' => variable_get('islandora_solr_search_result_fields', 'dc.subject ~ Subject,dc.type ~ Type'),
-    '#wysiwyg' => FALSE,
-  );
-
-  $form['islandora_solr_search_limit_result_fields'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Limit results to fields listed above?'),
-    '#return_value' => 1,
-    '#default_value' => variable_get('islandora_solr_search_limit_result_fields', 0),
-    '#description' => t('If checked, results displayed will be limited to the fields specified above.<br/><strong>Note:</strong> Some display profiles may not honour this value.'),
-  );
-
-  $form['islandora_solr_search_block_facet_min_count'] = array(
+  $form['facet_settings']['islandora_solr_search_block_facet_min_count'] = array(
     '#type' => 'textfield',
     '#title' => t('Minimum Results to Display Facet'),
     '#size' => 5,
     '#description' => t('Minimum results required to display a facet'),
     '#default_value' => variable_get('islandora_solr_search_block_facet_min_count', '2'),
   );
-  $form['islandora_solr_search_block_facet_shown_limit'] = array(
+  $form['facet_settings']['islandora_solr_search_block_facet_shown_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Initially shown facets'),
     '#size' => 5,
     '#description' => t('The number which should be shown initially. If there are more, then the a "Show more" button will allow the rest up to the value below to be shown. Use 0 to disable.'),
     '#default_value' => variable_get('islandora_solr_search_block_facet_shown_limit', '0'),
   );
-  $form['islandora_facet_display_table'] = array();
-  $form['islandora_solr_search_block_facet_limit'] = array(
+  $form['facet_settings']['islandora_solr_search_block_facet_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum Facets returned'),
     '#size' => 5,
@@ -297,14 +315,170 @@ function islandora_solr_admin_settings(&$form_state) {
       For example, if there are 100 possible subjects in a faceted result, you may wish to return only the top 10.'),
     '#default_value' => variable_get('islandora_solr_search_block_facet_limit', '20'),
   );
-  $form['islandora_solr_search_num_of_results'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Results per page'),
-    '#size' => 5,
-    '#description' => t('The number of results to show per page.'),
-    '#default_value' => variable_get('islandora_solr_search_num_of_results', '20'),
+  $form['facet_settings']['islandora_facet_display_table'] = array();  
+  
+  $form['facet_settings']['facet_dates'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date facets'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
   );
-  $form['islandora_solr_search_base_query'] = array(
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Date field'),
+    '#description' => t("Indicate which date field will appear in the <strong>Islandora Facet Block</strong>.<br />
+      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.date ~ Date</strong> "),
+    '#default_value' => variable_get('islandora_solr_facet_date' , NULL),
+    '#wysiwyg' => FALSE,
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_gap_variable'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Variable range gap'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('islandora_solr_facet_date_gap_variable', 0),
+    '#description' => t('When checked, the following date range settings will be used as a default. If a date range is filtered down, a new date range gap will be calculated and applied. When unchecked the following settings provide fixed range gaps.'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_start'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date start'),
+    '#description' => t('The lower bound for the first date range for all Date Faceting on this field. This should be a single date expression which may use the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_start' , 'NOW/YEAR-20YEARS'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_end'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date end'),
+    '#description' => t('The minimum upper bound for the last date range for all Date Faceting on this field. This should be a single date expression which may use the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_end' , 'NOW'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_gap'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date gap'),
+    '#description' => t('The size of each date range expressed as an interval to be added to the lower bound using the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_gap' , '+1YEAR'),
+  );
+  $form['facet_settings']['facet_dates']['islandora_solr_facet_date_format'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Date format'),
+    '#description' => t('The format of the date as it will be displayed in the facet block. Use the <a href="!url">PHP date()</a> formatting.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+    '#default_value' => variable_get('islandora_solr_facet_date_format' , 'Y'),
+  );
+  
+  // Range slider
+  $form['facet_settings']['facet_dates']['range_slider'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date range slider'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  // only expose when jquery_ui is installed
+  if (module_exists('jquery_ui') AND jquery_ui_get_version() >= 1.7) {
+    $form['facet_settings']['facet_dates']['range_slider']['islandora_solr_range_slider_enabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable range slider'),
+      '#return_value' => 1,
+      '#default_value' => variable_get('islandora_solr_range_slider_enabled', 0),
+      '#description' => t('When checked, the normal range facet will be replaced by a date slider widget.'),
+    );
+    $form['facet_settings']['facet_dates']['range_slider']['islandora_solr_range_slider_color'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Slider color'),
+      '#description' => t('A color for the range slider. Defaults to #edc240'),
+      '#default_value' => variable_get('islandora_solr_range_slider_color' , '#edc240'),
+    );
+  }
+  else {
+    $form['facet_settings']['facet_dates']['range_slider']['islandora_solr_date_filter_not_available'] = array(
+      '#type' => 'markup',
+      '#value' => t('The date range slider requires jQuery UI 1.7.3 or higher. Please download and enable the <a href="!jqueryupdate">jQuery Update</a> and <a href="!jqueryui">jQuery UI</a> modules and include jQuery UI 1.7.3.', array('!jqueryupdate' => 'http://drupal.org/project/jquery_update', '!jqueryui' => 'http://drupal.org/project/jquery_ui')),
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+    );
+  }
+
+
+  // Date filter
+  $form['facet_settings']['facet_dates']['date_filter'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date filter'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['facet_settings']['facet_dates']['date_filter']['islandora_solr_date_filter_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable date range filter'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('islandora_solr_date_filter_enabled', 0),
+    '#description' => t('When checked, a date range filter will become available underneath the date range facets. The date range filter includes a <em>from date</em> and a <em>to date</em> textfield. If the jquery ui module is installed and enabled, it will provide a calendar widget.'),
+  );
+  // only expose when jquery_ui is installed
+  if (module_exists('jquery_ui')) {
+    $form['facet_settings']['facet_dates']['date_filter']['islandora_solr_search_datepicker_range'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Years back and forward'),
+      '#default_value' => variable_get('islandora_solr_search_datepicker_range', '-100:+3'),
+      '#size' => 10,
+      '#maxsize' => 10,
+      // @TODO: in D7 more options are possible because of jquery ui 1.8 in D7 vs 1.6 in D6
+      '#description' => t('Number of years to go back and forward in the datepicker popup dropdown. Values: either relative to today\'s year (-nn:+nn) or absolute (nnnn:nnnn).'),
+    );
+  }
+  else {
+    $form['facet_settings']['facet_dates']['date_filter']['islandora_solr_date_filter_not_available'] = array(
+      '#type' => 'markup',
+      '#value' => t('In order to use a calendar popup with the date filter you need to install the <a href="!jqueryui">jQuery UI</a> module.', array('!jqueryui', 'http://drupal.org/project/jquery_ui')),
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+    );
+  }
+  
+
+  
+  
+  
+  
+  // Advanced search block
+  $form['advanced_search_block'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced search block'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['advanced_search_block']['islandora_solr_searchterms'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Search Terms'),
+    '#description' => t("Indicate what fields should appear in the dropdown menu of terms for the <strong>Solr Advanced Search Block</strong>.<br />
+      Enter terms on separate lines using the following pattern: field [tilde] preferred label. ie <strong>dc.title ~ Title</strong><br />
+      Review the schema.xml to see what terms are available. A list of the fields available when using the schema.xml packaged with the Islandora Solr
+      module is available in Islandora's online documentation."),
+    '#default_value' => variable_get('islandora_solr_searchterms', 'dc.title ~ Title'),
+    '#wysiwyg' => FALSE,
+  );
+  $form['advanced_search_block']['islandora_solr_search_block_repeat'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search Field Repetition'),
+    '#size' => 5,
+    '#description' => t('The number of fields you would like to have appear in the <strong>Solr Advanced Search Block</strong>'),
+    '#default_value' => variable_get('islandora_solr_search_block_repeat', '3'),
+  );
+
+
+  
+  
+  // Query defaults
+  $form['query_defaults'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Query defaults'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['query_defaults']['islandora_solr_search_namespace_restriction'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Limit results to namespace'),
+    '#size' => 5,
+    '#default_value' => variable_get('islandora_solr_search_namespace_restriction', ''),
+    '#description' => t("Enter a namespace ie 'demo' to restrict results to PIDs within that namespace."),
+  );
+  $form['query_defaults']['islandora_solr_search_base_query'] = array(
     '#type' => 'textfield',
     '#title' => t('Solr Default Query'),
     '#size' => 30,
@@ -312,9 +486,9 @@ function islandora_solr_admin_settings(&$form_state) {
       Setting a useful default query allows users to use solr to browse, without entering a query themselves.
       May be used in conjunction with a background filter, below.<br>
       Consider <strong><em>timestamp:[* TO NOW]</em></strong> or <strong><em>*:*</em></strong><br/>'),
-    '#default_value' => variable_get('islandora_solr_search_base_query', 'timestamp:[* TO NOW]'),
+    '#default_value' => variable_get('islandora_solr_search_base_query', SOLR_BASE_QUERY),
   );
-  $form['islandora_solr_search_base_filter'] = array(
+  $form['query_defaults']['islandora_solr_search_base_filter'] = array(
     '#type' => 'textarea',
     '#title' => t('Solr Base Filter'),
     '#description' => t('Some base filters to append to all user queries -- may be used to filter results and to facilitate null-query browsing. Enter one per line. <br/>
@@ -322,20 +496,28 @@ function islandora_solr_admin_settings(&$form_state) {
     '#default_value' => variable_get('islandora_solr_search_base_filter', ''),
     '#wysiwyg' => FALSE,
   );
+  
+  
+  // Debug
   $form['islandora_solr_search_debug_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Debug Mode?'),
     '#return_value' => 1,
     '#default_value' => variable_get('islandora_solr_search_debug_mode', 0),
-    '#description' => t('Dumps solr query to the screen for testing'),
+    '#description' => t('Dumps solr query to the screen for testing. Warning: if you have the Drupal Apache Solr module enabled alongside this one then the debug function will not work.'),
   );
-
+  
+  
   $form['buttons']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save Solr Configuration'),
     '#weight' => 50,
   );
-  $form['buttons']['reset'] = array('#type' => 'submit', '#value' => t('Reset to defaults'));
+  $form['buttons']['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset to defaults'),
+    '#weight' => 51,
+  );
 
   if (!empty($_POST) && form_get_errors()) {
     drupal_set_message(t('The settings have not been saved because of the errors.'), 'error');
@@ -357,44 +539,44 @@ function theme_islandora_solr_search_admin_settings($form) {
 
   // render facet display table
   $facet_header = array();
-  $facet_header[] = $form['islandora_solr_search_block_facet_min_count']['#title'];
-  $form['islandora_solr_search_block_facet_min_count']['#title'] = NULL;
-  $facet_header[] = $form['islandora_solr_search_block_facet_shown_limit']['#title'];
-  $form['islandora_solr_search_block_facet_shown_limit']['#title'] = NULL;
-  $facet_header[] = $form['islandora_solr_search_block_facet_limit']['#title'];
-  $form['islandora_solr_search_block_facet_limit']['#title'] = NULL;
+  $facet_header[] = $form['facet_settings']['islandora_solr_search_block_facet_min_count']['#title'];
+  $form['facet_settings']['islandora_solr_search_block_facet_min_count']['#title'] = NULL;
+  $facet_header[] = $form['facet_settings']['islandora_solr_search_block_facet_shown_limit']['#title'];
+  $form['facet_settings']['islandora_solr_search_block_facet_shown_limit']['#title'] = NULL;
+  $facet_header[] = $form['facet_settings']['islandora_solr_search_block_facet_limit']['#title'];
+  $form['facet_settings']['islandora_solr_search_block_facet_limit']['#title'] = NULL;
 
   $facet_rows = array();
   $facet_row = array();
-  $facet_row[] = array('data' => drupal_render($form['islandora_solr_search_block_facet_min_count']));
-  $facet_row[] = array('data' => drupal_render($form['islandora_solr_search_block_facet_shown_limit']));
-  $facet_row[] = array('data' => drupal_render($form['islandora_solr_search_block_facet_limit']));
+  $facet_row[] = array('data' => drupal_render($form['facet_settings']['islandora_solr_search_block_facet_min_count']));
+  $facet_row[] = array('data' => drupal_render($form['facet_settings']['islandora_solr_search_block_facet_shown_limit']));
+  $facet_row[] = array('data' => drupal_render($form['facet_settings']['islandora_solr_search_block_facet_limit']));
   $facet_rows[] = array('data' => $facet_row);
 
   // put the rendered table in another fieldset.
-  $form['islandora_facet_display_table']['#type'] = 'item';
-  $form['islandora_facet_display_table']['#title'] = t('Facet Display Settings');
-  $form['islandora_facet_display_table']['#description'] = t('Configure how facets will be diplayed in your environment.');
-  $form['islandora_facet_display_table']['#value'] = theme('table', $facet_header, $facet_rows, array('id' => 'solr_facet_table'));
+  $form['facet_settings']['islandora_facet_display_table']['#type'] = 'item';
+  $form['facet_settings']['islandora_facet_display_table']['#title'] = t('Facet Display Settings');
+  $form['facet_settings']['islandora_facet_display_table']['#description'] = t('Configure how facets will be diplayed in your environment.');
+  $form['facet_settings']['islandora_facet_display_table']['#value'] = theme('table', $facet_header, $facet_rows, array('id' => 'solr_facet_table'));
 
 
   // render islandora_solr_primary_display_table
-  foreach ($form['islandora_solr_primary_display_table']['machine_name'] as $key => $element) {
+  foreach ($form['display_profiles']['islandora_solr_primary_display_table']['machine_name'] as $key => $element) {
     $row = array();
     // check if $key is really the array we need. we shouldn't select the #parent array for example.
     if (is_array($element) && element_child($key)) {
 
       if ($key == $default) {
-        $form['islandora_solr_primary_display_table']['enabled'][$key]['#attributes']['disabled'] = 'disabled';
-        $form['islandora_solr_primary_display_table']['enabled'][$key]['#value'] = TRUE;
+        $form['display_profiles']['islandora_solr_primary_display_table']['enabled'][$key]['#attributes']['disabled'] = 'disabled';
+        $form['display_profiles']['islandora_solr_primary_display_table']['enabled'][$key]['#value'] = TRUE;
       }
 
-      $row[] = array('data' => drupal_render($form['islandora_solr_primary_display_table']['default'][$key]));
-      $row[] = array('data' => drupal_render($form['islandora_solr_primary_display_table']['enabled'][$key]), 'class' => 'advanced');
-      $row[] = array('data' => drupal_render($form['islandora_solr_primary_display_table']['name'][$key]), 'title' => $key);
-      $row[] = array('data' => drupal_render($form['islandora_solr_primary_display_table']['machine_name'][$key]), 'class' => 'advanced');
-      $row[] = array('data' => drupal_render($form['islandora_solr_primary_display_table']['weight'][$key]));
-      $row[] = array('data' => drupal_render($form['islandora_solr_primary_display_table']['configuration'][$key]), 'class' => 'advanced');
+      $row[] = array('data' => drupal_render($form['display_profiles']['islandora_solr_primary_display_table']['default'][$key]));
+      $row[] = array('data' => drupal_render($form['display_profiles']['islandora_solr_primary_display_table']['enabled'][$key]), 'class' => 'advanced');
+      $row[] = array('data' => drupal_render($form['display_profiles']['islandora_solr_primary_display_table']['name'][$key]), 'title' => $key);
+      $row[] = array('data' => drupal_render($form['display_profiles']['islandora_solr_primary_display_table']['machine_name'][$key]), 'class' => 'advanced');
+      $row[] = array('data' => drupal_render($form['display_profiles']['islandora_solr_primary_display_table']['weight'][$key]));
+      $row[] = array('data' => drupal_render($form['display_profiles']['islandora_solr_primary_display_table']['configuration'][$key]), 'class' => 'advanced');
 
       $rows[] = array('data' => $row, 'class' => 'draggable');
     }
@@ -404,23 +586,22 @@ function theme_islandora_solr_search_admin_settings($form) {
   // default | enabled | name | Machine readable name |  weight | configuration
   $header = array();
   $header[] = array('data' => t('Default'));
-  $header[] = array('data' => t('Enabled'), 'class' => 'advanced');
+  $header[] = array('data' => t('Enabled'));
   $header[] = array('data' => t('Name'));
-  $header[] = array('data' => t('Machine readable name'), 'class' => 'advanced');
+  $header[] = array('data' => t('Machine readable name'));
   $header[] = array('data' => t('Weight'));
-  $header[] = array('data' => t('Configuration'), 'class' => 'advanced');
+  $header[] = array('data' => t('Configuration'));
 
 
   // add tabledrag features
-
   drupal_add_tabledrag('solr_config_table', 'order', 'sibling', 'solr_weight');
 
 
   // put the rendered table in another fieldset.
-  $form['islandora_solr_primary_display_table']['#type'] = 'item';
-  $form['islandora_solr_primary_display_table']['#title'] = t('Primary Display Profile');
-  $form['islandora_solr_primary_display_table']['#description'] = t('Preferred normal display profile for search results.  These may be provided by third-party modules.');
-  $form['islandora_solr_primary_display_table']['#value'] = theme('table', $header, $rows, array('id' => 'solr-primary-display-table'));
+  $form['display_profiles']['islandora_solr_primary_display_table']['#type'] = 'item';
+  $form['display_profiles']['islandora_solr_primary_display_table']['#title'] = t('Primary Display Profiles');
+  $form['display_profiles']['islandora_solr_primary_display_table']['#description'] = t('Preferred normal display profile for search results.  These may be provided by third-party modules.');
+  $form['display_profiles']['islandora_solr_primary_display_table']['#value'] = theme('table', $header, $rows, array('id' => 'solr-primary-display-table'));
 
   // render form
   $output = '';
@@ -441,14 +622,11 @@ function theme_islandora_solr_search_admin_settings($form) {
  *
  */
 function solr_available($solr_url) {
-  $handle = curl_init($solr_url);
+  $handle = curl_init($solr_url . '/admin/ping');
   curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
   $response = curl_exec($handle);
   $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-  $retval = TRUE;
-  if ($httpCode % 100 == 4) { //FIXME:  Should probably deal with 500 errors as well?
-    $retval = FALSE;
-  }
+  $retval = ((int)($httpCode / 100) === 2);
   curl_close($handle);
   return $retval;
 }
@@ -516,7 +694,19 @@ function callback_prep() {
  * @param array $form_state
  */
 function islandora_solr_admin_settings_validate($form, &$form_state) {
-  $form_state['values']['solr_namespace_restriction'] = preg_replace('/:$/', '', $form_state['values']['solr_namespace_restriction']);
+  $form_state['values']['islandora_solr_search_namespace_restriction'] = preg_replace('/:$/', '', $form_state['values']['islandora_solr_search_namespace_restriction']);
+  
+  $limit_results_exposed = explode(',', $form_state['values']['islandora_solr_search_limit_results_exposed']);
+
+  foreach ($limit_results_exposed as $limit) {
+    $limit = trim($limit);
+    if (!is_numeric($limit)) {
+      form_set_error('islandora_solr_search_limit_results_exposed', t('Exposed results must be numeric.'));
+    }
+    if (strpos($limit, '.') OR strpos($limit, ',')) {
+      form_set_error('islandora_solr_search_limit_results_exposed', t('Exposed results cannot be decimals.'));
+    }
+  }
 }
 
 /**
