@@ -7,7 +7,7 @@
  */
 
 DEFINE('SOLR_SEARCH_PATH','islandora/solr/search');
-DEFINE('SOLR_BASE_QUERY','timestamp:[* TO NOW]');
+DEFINE('SOLR_BASE_QUERY','*:*');
 
 /**
  * Islandora Solr Query Processor
@@ -62,7 +62,7 @@ class IslandoraSolrQueryProcessor {
       }
     }
     $this->buildQuery($query, $params);
-
+    
     return $this->executeQuery();
   }
 
@@ -83,7 +83,7 @@ class IslandoraSolrQueryProcessor {
       $this->solrDefType = $this->internalSolrParams['type'];
       $this->solrParams['defType'] = $this->internalSolrParams['type'];
     }
-
+    
     // Set query
     // fix the query as some characters will break the search : and / slash are examples
     $this->solrQuery = urldecode(restoreSlashes($query));
@@ -97,6 +97,19 @@ class IslandoraSolrQueryProcessor {
       // we must also undo dismax if it's been set
       $this->solrDefType = NULL;
       $this->solrParams['defType'] = NULL;
+    }
+    
+    // set sort
+    if (isset($this->internalSolrParams['sort'])) {
+      $sort_explode = explode(' ', $this->internalSolrParams['sort']);
+      // check if an order is given and if the order value is asc or desc
+      if (isset($sort_explode[1]) AND ($sort_explode[1] == 'asc' OR $sort_explode[1] == 'desc')) {
+        $this->solrParams['sort'] = $this->internalSolrParams['sort'];
+      }
+      else {
+        // use ascending
+        $this->solrParams['sort'] = $sort_explode[0] . ' asc';
+      }
     }
     
     // Set display variable
@@ -134,8 +147,8 @@ class IslandoraSolrQueryProcessor {
     $startPage = isset($_GET['page']) ? $_GET['page'] : 0;
     
     // set results limit
-    $this->solrLimit = variable_get('islandora_solr_search_num_of_results', 20);
-
+    $this->solrLimit = isset($this->internalSolrParams['limit']) ? $this->internalSolrParams['limit'] : variable_get('islandora_solr_search_num_of_results', 25);
+        
     // set solr start
     $this->solrStart = max(0, $startPage) * $this->solrLimit;
 
@@ -168,21 +181,35 @@ class IslandoraSolrQueryProcessor {
       'qt' => variable_get("islandora_solr_search_block_request_handler", "standard"),
       'hl' => isset($keys[0]) ? 'true' : NULL,
       'hl.fl' => isset($keys[0]) ? trim($keys[0]) : NULL,
-      'hl.fragsize' => 400,
+      'hl.fragsize' => 150,
+      'hl.simple.pre' => '<strong>',
+      'hl.simple.post' => '</strong>',
     );
     // check for date facets
-    if (variable_get('islandora_solr_facet_date' , NULL) != NULL) {
+    if (variable_get('islandora_solr_facet_date', NULL) != NULL) {
       // set variables
       $facet_date = variable_get('islandora_solr_facet_date' , NULL);
-      $facet_date = islandora_build_substitution_list($facet_date);
-      $facet_date = implode(",", array_keys($facet_date));
+      $facet_date_arr = islandora_build_substitution_list($facet_date);
+      $facet_date = implode(",", array_keys($facet_date_arr));
+      
       $params_date_facets = array(
         'facet.date' => explode(',', $facet_date),
-        'facet.date.start' => variable_get('islandora_solr_facet_date_start' , 'NOW/YEAR-20YEARS'),
-        'facet.date.end' => variable_get('islandora_solr_facet_date_end' , 'NOW'),
-        'facet.date.gap' => variable_get('islandora_solr_facet_date_gap' , '+1YEAR'),
       );
+      foreach ($facet_date_arr as $date_facet => $label) {
+        $params_date_facets["f.$date_facet.facet.date.start"] = variable_get('islandora_solr_facet_date_start' , 'NOW/YEAR-20YEARS');
+        $params_date_facets["f.$date_facet.facet.date.end"] = variable_get('islandora_solr_facet_date_end' , 'NOW');
+        $params_date_facets["f.$date_facet.facet.date.gap"] = variable_get('islandora_solr_facet_date_gap' , '+1YEAR');
+      }
+
+      // date date facets to parameters
       $params_array = array_merge($params_array, $params_date_facets);
+      
+      // if date range fields are set, don't include them in the normal facet list. Results in unexpected behaviour
+      $facet_date_arr = array_keys($facet_date_arr);
+      if (isset($params_array['facet.field'])) {
+        $p_facet_field['facet.field'] = array_diff($params_array['facet.field'], $facet_date_arr);
+        $params_array = array_merge($params_array, $p_facet_field);
+      }
     }
     // add parameters
     $this->solrParams = array_merge($this->solrParams, $params_array);
@@ -193,17 +220,19 @@ class IslandoraSolrQueryProcessor {
     // set base filters
     $base_filters = preg_split("/\\r\\n|\\n|\\r/", variable_get('islandora_solr_search_base_filter', ''), -1, PREG_SPLIT_NO_EMPTY);
     
-    // set filter parameters - both from url and admin settings.
-    if (is_array($this->internalSolrParams['f'])) {
-      $this->solrParams['fq'] = $this->internalSolrParams['f'];
-      if (!empty($base_filters)) {
-        $this->solrParams['fq'] = array_merge($this->internalSolrParams['f'], $base_filters);
-      }
-    }
-    elseif (!empty($base_filters)) {
-      $this->solrParams['fq'] = $base_filters;
-    }
     
+    // set filter parameters - both from url and admin settings.
+    if (is_array($this->internalSolrParams['f']) OR !empty($base_filters)) {
+      $this->solrParams['fq'] = array();
+    }
+    // filters
+    if (is_array($this->internalSolrParams['f'])) {
+      $this->solrParams['fq'] = array_merge($this->solrParams['fq'], $this->internalSolrParams['f']);
+    }
+    // base filters
+    if (!empty($base_filters)) {
+      $this->solrParams['fq'] = array_merge($this->solrParams['fq'], $base_filters);
+    }
     
     // restrict results based on specified namespace
     $namespace = trim(variable_get('islandora_solr_search_namespace_restriction', NULL));
@@ -211,14 +240,13 @@ class IslandoraSolrQueryProcessor {
       $this->solrParams['fq'][] = "PID:$namespace\:*";
     }
 
-    // if no qf fields are specified in rthe requestHandler a default list is supplied here for dismax searches
+    // if no qf fields are specified in the requestHandler a default list is supplied here for dismax searches
     if (!variable_get('dismax_allowed', 0) && $this->internalSolrParams['type'] == "dismax") {
       $this->solrParams['qf'] = 'dc.title^5 dc.subject^2 dc.description^2 dc.creator^2 dc.contributor^1 dc.type';
     }
 
     // Invoke a hook for third-party modules to alter the parameters.
     module_invoke_all('islandora_solr_search_query_processor', $this); //The hook implementation needs to specify that it takes a reference, not be passed one
-    $processor->solrParams['fq'][] = $fq; // @TODO figure out where $processor is set - what does it do?
     return;
   }
 
@@ -249,6 +277,7 @@ class IslandoraSolrQueryProcessor {
     try {
       // solrQuery
       $solr_query = ($this->internalSolrQuery) ? $this->internalSolrQuery : $this->solrQuery;
+      
       // execute query
       $results = $solr->search($solr_query, $this->solrStart, $this->solrLimit, $this->solrParams);
     } catch (Exception $e) {
