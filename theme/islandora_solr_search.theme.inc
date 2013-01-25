@@ -72,7 +72,7 @@ function islandora_solr_search_preprocess_islandora_solr_search(&$variables) {
   // detect existing datastreams and create a linked thumbnail if TN exists
   foreach($variables['results'] as $key => $value) {
     $pid = $variables['pids'][$key];
-    if($object = new Fedora_Item($pid)) {
+    if ($object = new Fedora_Item($pid)) {
       $ds_array = $object->get_datastreams_list_as_array();
       if (array_key_exists('TN', $ds_array)) {
         $solr_object_link = 'fedora/repository/' . $pid;
@@ -86,6 +86,5 @@ function islandora_solr_search_preprocess_islandora_solr_search(&$variables) {
     else {
       $variables['solr_thumbnail'][$key] = '';
     }
-
   }
 }
