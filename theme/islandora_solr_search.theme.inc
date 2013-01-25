@@ -69,14 +69,12 @@ function islandora_solr_search_preprocess_islandora_solr_search(&$variables) {
   foreach ($variables['elements'] as $key => $value) {
     $variables[$key] = $value;
   }
-
   // detect existing datastreams and create a linked thumbnail if TN exists
   foreach($variables['results'] as $key => $value) {
-    if(isset($value['PID']['value'])) {
-      $object = new Fedora_Item($value['PID']['value']);
+    $pid = $variables['pids'][$key];
+    if($object = new Fedora_Item($pid)) {
       $ds_array = $object->get_datastreams_list_as_array();
-      if (array_key_exists('TN', $ds_array) && (isset($variables['results'][$key]['PID']['value']))) {
-        $pid = $variables['results'][$key]['PID']['value'];
+      if (array_key_exists('TN', $ds_array)) {
         $solr_object_link = 'fedora/repository/' . $pid;
         $solr_thumbnail_img = '<img src="' . $base_path . $solr_object_link . '/TN"' . '/>';
         $variables['solr_thumbnail'][$key] = l($solr_thumbnail_img, $solr_object_link, array('html' => TRUE, 'attributes' => array('title' => $variables['results'][$key]['dc.title']['value'])));
@@ -85,5 +83,9 @@ function islandora_solr_search_preprocess_islandora_solr_search(&$variables) {
         $variables['solr_thumbnail'][$key] = '<img src="' . $path . '/images/defaultimg.png' . '"/>';
       }
     }
+    else {
+      $variables['solr_thumbnail'][$key] = '';
+    }
+
   }
 }
