@@ -27,7 +27,7 @@ function islandora_solr_islandora_solr_query_blocks() {
     'advanced' => array(
       'name' => t('Islandora advanced search'),
       'module' => 'islandora_solr',
-      'file' => 'islandora_solr.block.inc',
+      'file' => 'includes/blocks.inc',
       'class' => NULL,
       'function' => NULL,
       'form' => 'islandora_solr_advanced_search_form',
@@ -35,7 +35,7 @@ function islandora_solr_islandora_solr_query_blocks() {
     'simple' => array(
       'name' => t('Islandora simple search'),
       'module' => 'islandora_solr',
-      'file' => 'islandora_solr.block.inc',
+      'file' => 'includes/blocks.inc',
       'class' => NULL,
       'function' => NULL,
       'form' => 'islandora_solr_simple_search_form',
@@ -43,7 +43,7 @@ function islandora_solr_islandora_solr_query_blocks() {
     'basic_facets' => array(
       'name' => t('Islandora facets'),
       'module' => 'islandora_solr',
-      'file' => 'IslandoraSolrResults.inc',
+      'file' => 'includes/results.inc',
       'class' => 'IslandoraSolrResults',
       'function' => 'displayFacets',
       'form' => NULL,
@@ -51,7 +51,7 @@ function islandora_solr_islandora_solr_query_blocks() {
     'current_query' => array(
       'name' => t('Islandora query'),
       'module' => 'islandora_solr',
-      'file' => 'IslandoraSolrResults.inc',
+      'file' => 'includes/results.inc',
       'class' => 'IslandoraSolrResults',
       'function' => 'currentQuery',
       'form' => NULL,
@@ -59,7 +59,7 @@ function islandora_solr_islandora_solr_query_blocks() {
     'display_switch' => array(
       'name' => t('Islandora displays'),
       'module' => 'islandora_solr',
-      'file' => 'islandora_solr.block.inc',
+      'file' => 'includes/blocks.inc',
       'class' => NULL,
       'function' => 'islandora_solr_display',
       'form' => NULL,
@@ -67,7 +67,7 @@ function islandora_solr_islandora_solr_query_blocks() {
     'sort' => array(
       'name' => t('Islandora sort'),
       'module' => 'islandora_solr',
-      'file' => 'islandora_solr.block.inc',
+      'file' => 'includes/blocks.inc',
       'class' => NULL,
       'function' => 'islandora_solr_sort',
       'form' => NULL,
@@ -113,14 +113,11 @@ function islandora_solr_block_view($block_name = '') {
   // get global class
   global $_islandora_solr_queryclass;
 
-  // all hook_init()
-  islandora_solr_init(); // @TODO: should we really call islandora_solr_init() again ?
-
   // get solr blocks
   $solr_blocks = module_invoke_all("islandora_solr_query_blocks");
 
   // if the block that is called is defined
-  if (!empty($solr_blocks[$block_name]) AND user_access('search islandora solr')) {
+  if (!empty($solr_blocks[$block_name]) && user_access('search islandora solr')) {
 
     // set block title
     $block['subject'] = $solr_blocks[$block_name]['name'];
@@ -131,7 +128,7 @@ function islandora_solr_block_view($block_name = '') {
     // if a class is present, instantiate it and proceed.
     // The variable $_islandora_solr_queryclass (the IslandoraSolrQueryProcessor, containing
     // the Solr search result), is fed as an argument.
-    if (!empty($solr_blocks[$block_name]['class']) AND !empty($solr_blocks[$block_name]['function'])) {
+    if (!empty($solr_blocks[$block_name]['class']) && !empty($solr_blocks[$block_name]['function'])) {
       // check if we're on a search results page
       if (islandora_solr_results_page($_islandora_solr_queryclass)) {
         $display_class = new $solr_blocks[$block_name]['class']();
@@ -168,13 +165,20 @@ function islandora_solr_block_view($block_name = '') {
  */
 function islandora_solr_simple_search_form($form, &$form_state) {
 
-  $form["islandora_simple_search_query"] = array(
-    '#size' => '20',
+  $form['simple'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array(
+        'container-inline')
+      )
+    );
+  $form['simple']["islandora_simple_search_query"] = array(
+    '#size' => '15',
     '#type' => 'textfield',
     '#title' => '',
     '#default_value' => '', // @TODO: should this be the searched value?
   );
-  $form['submit'] = array(
+  $form['simple']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('search')
   );
@@ -213,7 +217,6 @@ function islandora_solr_simple_search_form_submit($form, &$form_state) {
  */
 function islandora_solr_advanced_search_form($form, &$form_state) {
   global $_islandora_solr_queryclass;
-  islandora_solr_init(); // @TODO: figure out why init needs to be called
 
   // include common.inc
   module_load_include('inc', 'islandora_solr', 'includes/common');
@@ -242,7 +245,7 @@ function islandora_solr_advanced_search_form($form, &$form_state) {
     $values = $form_state['values'];
   }
   // 2. populate with current query on search results page
-  elseif (islandora_solr_results_page($_islandora_solr_queryclass) == TRUE AND (!isset($_islandora_solr_queryclass->internalSolrParams['type']) OR $_islandora_solr_queryclass->internalSolrParams['type'] != 'dismax')) {
+  elseif (islandora_solr_results_page($_islandora_solr_queryclass) == TRUE && !isset($_islandora_solr_queryclass->internalSolrParams['type'])) {
 
     // get current query
     $query = $_islandora_solr_queryclass->solrQuery;
@@ -319,7 +322,7 @@ function islandora_solr_advanced_search_form($form, &$form_state) {
       '#title' => t('Field'),
       '#type' => 'select',
       '#default_value' => isset($value['field']) ? $value['field'] : 'dc.title',
-      '#options' => islandora_build_substitution_list(variable_get('islandora_solr_searchterms', 'dc.title ~ Title,dc.subject ~ Subject')),
+      '#options' => islandora_solr_get_fields('search_fields'),
     );
     $term['search'] = array(
       '#title' => t('Search terms'),
@@ -360,7 +363,7 @@ function islandora_solr_advanced_search_form($form, &$form_state) {
           'progress' => array('type' => 'none'),
         )
       );
-      if ((variable_get('islandora_solr_search_boolean', 'user') == 'user') AND ((count($values['terms']) -1) != $i)) {
+      if ((variable_get('islandora_solr_search_boolean', 'user') == 'user') && ((count($values['terms']) -1) != $i)) {
         $term['boolean'] = array(
           '#type' => 'select',
           '#prefix' => '<div>',
@@ -485,7 +488,7 @@ function islandora_solr_display() {
     // parameters set in url
     $params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
     // set path
-    $path = SOLR_SEARCH_PATH . '/' . $_islandora_solr_queryclass->solrQuery;
+    $path = SOLR_SEARCH_PATH . '/' . replace_slashes($_islandora_solr_queryclass->solrQuery);
 
     // get profiles
     $profiles = module_invoke_all("islandora_solr_primary_display");
@@ -540,7 +543,7 @@ function islandora_solr_display() {
 
           // create link
           // we're not using l() because of active classes: http://drupal.org/node/41595
-          $item = '<a' . drupal_attributes($attr) . '>' . $display_name . '</a>';
+          $item = '<a' . drupal_attributes($attr) . '>' . check_plain($display_name) . '</a>';
 
           // add link to list
           $list_items[] = $item;
@@ -578,10 +581,10 @@ function islandora_solr_sort() {
     // parameters set in url
     $params = isset($_islandora_solr_queryclass->internalSolrParams) ? $_islandora_solr_queryclass->internalSolrParams : array();
     // set path
-    $path = SOLR_SEARCH_PATH . '/' . $_islandora_solr_queryclass->solrQuery;
+    $path = SOLR_SEARCH_PATH . '/' . replace_slashes($_islandora_solr_queryclass->solrQuery);
 
     // get sort terms
-    $sort_terms = islandora_build_substitution_list(variable_get('islandora_solr_sort_terms', 'score ~ Relevance, PID ~ PID'));
+    $sort_terms = islandora_solr_get_fields('sort_fields');
 
     // get current sort (check in the actual parameters used for the query, because modules might have altered it)
     if (isset($_islandora_solr_queryclass->solrParams['sort'])) {
@@ -607,7 +610,7 @@ function islandora_solr_sort() {
 
       // create query and indicator arrow
       if ($term == $current_sort_term) {
-        if (isset($current_sort_order) AND $current_sort_order == 'asc') {
+        if (isset($current_sort_order) && $current_sort_order == 'asc') {
           // set order
           $order = 'desc';
           // create indicator
@@ -621,7 +624,7 @@ function islandora_solr_sort() {
         }
       }
       // the term is score or a date, we want descending order by default
-      elseif ($term == 'score' OR stripos($term, 'date')) {
+      elseif ($term == 'score' || stripos($term, 'date')) {
         // set order
         $order = 'desc';
       }

@@ -7,7 +7,6 @@
 
 $values = array("/", "+");
 
-
 /**
  * Initialize a pager for theme('pager') without running an SQL query.
  *
@@ -36,7 +35,7 @@ function islandora_solr_pager_init($total, $limit = 10, $element = 0) {
   // We calculate the total of pages as ceil(items / limit).
   $pager_total_items[$element] = $total;
   $pager_total[$element] = ceil($pager_total_items[$element] / $limit);
-  $pager_page_array[$element] = max(0, min((int)$pager_page_array[$element], ((int)$pager_total[$element]) - 1));
+  $pager_page_array[$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
 
   // return the current position
   return $pager_page_array[$element];
@@ -65,7 +64,6 @@ function replace_slashes($str) {
   $values = array("/", "+");
   return str_replace($values, $replacements, $str); // reverse of above
 }
-
 
 /**
  * A better explode method allows quotes in the returned strings. Taken from
@@ -107,7 +105,7 @@ function lesser_escape($value) {
   // Zac removed the quotation mark and whitespace from this list.
   // a) Spaces in our search strings don't need escaping
   // b) We want to allow users to use quotation marks to indicate multi-word phrases
- //  (alan) pulled the asterisk from excaping to allow wild cards
+  //  (alan) pulled the asterisk from excaping to allow wild cards
   $pattern = '/(\+|-|&&|\|\||!|\(|\)|\{|}|\[|]|\^|~|\?|:|\\\)/';
   $replace = '\\\$1';
 
@@ -122,7 +120,6 @@ function solr_escape($facets) {
     $tmp = lesser_escape(trim($tmp));
 
     $return_facets[] = $tmp . drupal_substr($facet, strpos($facet, ':"'), drupal_strlen($facet));
-
   }
   return $return_facets;
 }
@@ -142,8 +139,10 @@ function islandora_build_substitution_list($raw_field_list) {
     if ($line) {
       $line_array = explode('~', $line);
       $key = trim($line_array[0]);
-      $value = trim($line_array[1]);
-      if (!$value) {
+      if (count($line_array) > 1) {
+        $value = trim($line_array[1]);
+      }
+      else {
         $value = $key;
       }
       $facet_array[$key] = $value;
@@ -154,4 +153,39 @@ function islandora_build_substitution_list($raw_field_list) {
     }
   }
   return $facet_array;
+}
+
+/**
+ * Prepares the Solr docs of an object results array.
+ *
+ * Preparing the Solr doc array includes adding the label, value and class name
+ * based on the Solr field name. When you created a new Solr display, it is
+ * not required to use this helper function, but it can be helpful.
+ *
+ * @param array $object_results
+ *   An array containing the object results. This includes the Solr doc array.
+ * @return array
+ *   The original object results array, but with a modified Solr doc.
+ */
+function islandora_solr_prepare_solr_doc($object_results) {
+  $fields_all = islandora_solr_get_fields('result_fields', FALSE);
+  // Loop over object results.
+  foreach ($object_results as $object_index => $object_result) {
+    $doc = $object_result['solr_doc'];
+    $rows = array();
+    foreach ($doc as $field => $value) {
+      if (isset($fields_all[$field])) {
+        $label = $fields_all[$field];
+      }
+      else {
+        $label = $field;
+      }
+      $rows[$field]['label'] = $label;
+      $rows[$field]['class'] = drupal_strtolower( preg_replace('/[^A-Za-z0-9]/', '-', $field));
+      $rows[$field]['value'] = $value;
+    }
+    // Replace Solr doc.
+    $object_results[$object_index]['solr_doc'] = $rows;
+  }
+  return $object_results;
 }
