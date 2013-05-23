@@ -58,6 +58,8 @@ class IslandoraSolrResultsRSS extends IslandoraSolrResults {
       // get the variables for the <item> element
       $item = $this->rssItem($doc);
       
+      drupal_alter('islandora_solr_search_rss_item', $item, $doc); 
+      
       // render rss item and add to items string
       $items .= format_rss_item($item['title'], $item['link'], $item['description'], $item['items']);
     }
