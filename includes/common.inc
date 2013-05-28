@@ -57,20 +57,20 @@ function replaceSlashes($str) {
 
 //a better explode method allows quotes in the returned strings.  taken from the php.net site
 function csv_explode($delim=',', $str, $enclose='"', $preserve=FALSE) {
-  $res_Arr = array();
+  $res_arr = array();
   $n = 0;
   $exp_enc_arr = explode($enclose, $str);
   foreach ($exp_enc_arr as $enc_item) {
     if ($n++ %2) {
-      array_push($res_Arr, array_pop($res_Arr) . ($preserve?$enclose:'') . $enc_item . ($preserve?$enclose:''));
+      array_push($res_arr, array_pop($res_arr) . ($preserve?$enclose:'') . $enc_item . ($preserve?$enclose:''));
     }
     else {
       $exp_del_arr = explode($delim, $enc_item);
-      array_push($res_Arr, array_pop($res_Arr) . array_shift($exp_del_arr));
-      $res_Arr = array_merge($res_Arr, $exp_del_arr);
+      array_push($res_arr, array_pop($res_arr) . array_shift($exp_del_arr));
+      $res_arr = array_merge($res_arr, $exp_del_arr);
     }
   }
-  return $res_Arr;
+  return $res_arr;
 }
 
 //copied from apache solr service and added space as a value to escape.  We are using this to escape the field being searched not the text being searched for so we need both.
@@ -124,13 +124,13 @@ function islandora_build_substitution_list($raw_field_list) {
 
 /**
    * checks to see if browser is IE and is less then the specified version
-   * 
-   * user agent can be spoofed but we are only using this to determine 
+   *
+   * user agent can be spoofed but we are only using this to determine
    * whether or not we should show the Date facet with the canvas graph
-   * 
+   *
    * @param mixed $version_number
    *   version number ie 8
-   * @return boolean 
+   * @return boolean
    *   TRUE if browser is IE and version is less then $version_number
    *   otherwise FALSE
    */

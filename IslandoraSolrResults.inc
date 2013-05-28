@@ -205,7 +205,7 @@ class IslandoraSolrResults {
       // append array to results array
       $results_array[] = $rows;
     }
-    
+
     // make pids accessible without interfering with results
     $elements['pids'] = $pids;
 
