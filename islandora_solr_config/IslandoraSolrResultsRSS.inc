@@ -115,7 +115,7 @@ class IslandoraSolrResultsRSS extends IslandoraSolrResults {
     $result['description'] = $rss_item['description'] ? $doc[$rss_item['description']] : '';
     $result['items'] = array(
       array('key' => 'author', 'value' => $rss_item['author'] ? $doc[$rss_item['author']] : ''),
-      array('key' => 'guid', 'value' => $doc['PID'], 'attributes' => array('isPermaLink' => 'false',)),
+      array('key' => 'guid', 'value' => $doc['PID'], 'attributes' => array('isPermaLink' => 'false', )),
       array('key' => 'pubDate', 'value' => $rss_item['pubDate'] ? $doc[$rss_item['pubDate']] : ''),
       array('key' => 'category', 'value' => $rss_item['category'] ? $doc[$rss_item['category']] : ''),                             
       array('key' => 'enclosure', 'value' => '', 'attributes' => array('url' => $enclosure_url, 'length' => '', 'type' => '')),

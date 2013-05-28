@@ -21,14 +21,14 @@ function islandora_solr_search_init() {
   module_load_include('inc', 'islandora_solr_search', 'includes/common');
   module_load_include('inc', 'islandora_solr_search', 'IslandoraSolrQueryProcessor');
     
-  static $islandora_solr_search_init = false;
+  static $islandora_solr_search_init = FALSE;
   if (!$islandora_solr_search_init) {
     drupal_add_css(drupal_get_path('module', 'islandora_solr_search') . '/css/islandora_solr_search.css');
     global $queryClass;
     if (empty($queryClass)) {
       $queryClass = new IslandoraSolrQueryProcessor();
     }
-    $islandora_solr_search_init = true;
+    $islandora_solr_search_init = TRUE;
   }
 }
 
@@ -288,7 +288,8 @@ function islandora_solr_search_block($op = 'list', $delta = 0, $edit = array()) 
       if (!empty($solr_blocks[$delta])) {
 
         // First we'll set the block title.
-        $block['subject'] = $solr_blocks[$delta]['name'];
+        $block['subject'] = check_plain($solr_blocks[$delta]['name']);
+        
 
         // Include the file from which the block originates.
         require_once( drupal_get_path('module', $solr_blocks[$delta]['module']) . '/' . $solr_blocks[$delta]['file'] );
@@ -387,7 +388,7 @@ function islandora_solr_search_block_form_validate($form, &$form_state) {
   $message = t("Please enter search term.");
   for ($fieldNum = 1; $fieldNum <= $repeat; $fieldNum++) {
     if (!empty($form_state['values']["fedora_terms$fieldNum"])) {
-      if($form_state['values']["fedora_terms$fieldNum"][0]== '*'){
+      if ($form_state['values']["fedora_terms$fieldNum"][0] == '*') {
        unset($form_state['values']["fedora_terms$fieldNum"]);
        $message = t("If  !char  is used in search field it must follow other characters.", array('!char' => '<bold>*</bold>'));
        continue;

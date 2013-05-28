@@ -125,7 +125,7 @@ function islandora_solr_admin_settings(&$form_state) {
       foreach (array_intersect_assoc($profiles, $weight) as $key => $value) {
         $profiles_sorted[$key] = $value;
       }
-	  
+
       //Account for new profiles.
       foreach (array_diff_assoc($profiles, $profiles_sorted) as $key => $value) {
         $profiles_sorted[$key] = $value;
@@ -625,8 +625,8 @@ function solr_available($solr_url) {
   $handle = curl_init($solr_url . '/admin/ping');
   curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
   $response = curl_exec($handle);
-  $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-  $retval = ((int)($httpCode / 100) === 2);
+  $http_code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+  $retval = ((int)($http_code / 100) === 2);
   curl_close($handle);
   return $retval;
 }
@@ -644,10 +644,10 @@ function get_handlers($solr_url) {
   $xml = simplexml_load_string(curl_exec($ch));
   foreach ($xml->requestHandler as $handler) {
     if ($handler['class'] == 'solr.SearchHandler') {
-      $handlerName = (string) $handler['name'];
-      $slashed = preg_match('/^\//', $handlerName);
-      if ($handlerName != 'dismax' && $handlerName != 'partitioned' & !$slashed) {
-        $handlers[$handlerName] = $handlerName;
+      $handler_name = (string) $handler['name'];
+      $slashed = preg_match('/^\//', $handler_name);
+      if ($handler_name != 'dismax' && $handler_name != 'partitioned' & !$slashed) {
+        $handlers[$handler_name] = $handler_name;
       }
     }
   }
