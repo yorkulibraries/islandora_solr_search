@@ -125,7 +125,7 @@ class IslandoraSolrQueryProcessor {
       // So we can allow empty queries to dismax.
       $this->solrQuery = ' ';
       // Set base query.
-      $this->internalSolrQuery = variable_get('islandora_solr_base_query', 'timestamp:[* TO NOW]');
+      $this->internalSolrQuery = variable_get('islandora_solr_base_query', '*:*');
 
       // We must also undo dismax if it has been set.
       $this->solrDefType = NULL;
@@ -282,6 +282,11 @@ class IslandoraSolrQueryProcessor {
     // Invoke a hook for third-party modules to alter the parameters.
     // The hook implementation needs to specify that it takes a reference.
     module_invoke_all('islandora_solr_query', $this);
+    drupal_alter('islandora_solr_query', $this);
+
+    // Reset solrStart incase the number of results (ie. $this->solrLimit) is
+    // modified.
+    $this->solrStart = max(0, $start_page) * $this->solrLimit;
   }
 
   /**
