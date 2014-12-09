@@ -13,6 +13,7 @@ ul#secondary-display-profiles
 {
   float:right;
   margin: 0px 0px 0px 0px;
+  list-style-type: none;
 }
 
 .item-list ul#secondary-display-profiles li
