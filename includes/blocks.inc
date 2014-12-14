@@ -411,7 +411,7 @@ function islandora_solr_simple_search_form($form, &$form_state) {
     ),
   );
   $form['simple']["islandora_simple_search_query"] = array(
-    '#size' => '15',
+    '#size' => '14',
     '#type' => 'textfield',
     '#title' => '',
     // @todo Should this be the searched value?
@@ -419,7 +419,8 @@ function islandora_solr_simple_search_form($form, &$form_state) {
   );
   $form['simple']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('search'),
+    '#value' => '<i class="fa fa-search yudl-search-button"></i>'
+    ,
   );
   return $form;
 }
