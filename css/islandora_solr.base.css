@@ -49,3 +49,7 @@ ul#secondary-display-profiles
   display: inline-block;
   margin-right: 10px;
 }
+
+#islandora-solr-advanced-search-form div.form-item-islandora-solr-allow-preserve-filters {
+  display: block;
+}
