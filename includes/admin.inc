@@ -144,6 +144,15 @@ function islandora_solr_admin_index_settings($form, &$form_state) {
     '#value' => $solr_avail ? 1 : 0,
   );
 
+  // Solr force delete from index during object purge.
+  $form['solr_ajax_wrapper']['islandora_solr_force_update_index_after_object_purge'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Force update of Solr index after an object is deleted'),
+    '#weight' => 5,
+    '#description' => t('If checked, deleting objects will also force their removal from the Solr index. <br/><strong>Note:</strong> When active, UI consistency will be increased on any pages using Solr queries for display. This setting is not appropriate for every installation (e.g., on sites with a large volume of Solr commits that hit execution limits, or where the Solr index is not directly writable from Drupal).'),
+    '#default_value' => variable_get('islandora_solr_force_update_index_after_object_purge', 0),
+  );
+
   // Actions.
   $form['actions'] = array(
     '#type' => 'actions',
@@ -190,12 +199,14 @@ function _islandora_solr_admin_index_settings_submit($form, &$form_state) {
     case 'edit-submit':
       variable_set('islandora_solr_url', $form_state['values']['islandora_solr_url']);
       variable_set('islandora_solr_request_handler', $form_state['values']['islandora_solr_request_handler']);
+      variable_set('islandora_solr_force_update_index_after_object_purge', $form_state['values']['islandora_solr_force_update_index_after_object_purge']);
       drupal_set_message(t('The Solr configuration options have been saved.'));
       break;
 
     case 'edit-reset':
       variable_del('islandora_solr_url');
       variable_del('islandora_solr_request_handler');
+      variable_del('islandora_solr_force_update_index_after_object_purge');
       drupal_set_message(t('The configuration options have been reset to their default values.'));
       break;
   }
@@ -1543,6 +1554,7 @@ function _islandora_solr_handle_solr_field_settings($solr_field_settings = NULL,
           'link_rendering' => $solr_field_settings['link_rendering'],
           'snippet' => isset($solr_field_settings['snippet']) ? $solr_field_settings['snippet'] : NULL,
           'date_format' => isset($solr_field_settings['date_format']) ? trim($solr_field_settings['date_format']) : '',
+          'truncation_type' => isset($solr_field_settings['truncation_type']) ? trim($solr_field_settings['truncation_type']) : 'separate_value_option',
           'maximum_length' => isset($solr_field_settings['maximum_length']) ? trim($solr_field_settings['maximum_length']) : '',
           'add_ellipsis' => isset($solr_field_settings['add_ellipsis']) ? $solr_field_settings['add_ellipsis'] : FALSE,
           'wordsafe' => isset($solr_field_settings['wordsafe']) ? $solr_field_settings['wordsafe'] : FALSE,
@@ -1769,12 +1781,18 @@ function islandora_solr_admin_settings_result_fields($form, &$form_state, $varia
     '#description' => t('<strong>Note:</strong> Truncation can lead to unexpected results when used in secondary display profiles such as CSV and RSS.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
+    'truncation_type' => array(
+      '#type' => 'radios',
+      '#title' => t('Truncation Type'),
+      '#options' => array('separate_value_option' => t('Limit length of each separate value'), 'whole_field_option' => t('Limit Length of the whole field')),
+      '#default_value' => isset($values['truncation_type']) ? $values['truncation_type'] : 'separate_value_option',
+    ),
     'maximum_length' => array(
       '#type' => 'textfield',
       '#title' => t('Maximum Length'),
       '#default_value' => isset($values['maximum_length']) ? $values['maximum_length'] : '0',
       '#element_validate' => array('element_validate_integer'),
-      '#description' => t('Maximum field length to render for display. A setting of 0 (default) renders the entire value.'),
+      '#description' => t('Maximum field length to render for display. A setting of 0 (default) renders the entire value.<br /> When truncating based on the whole field the max length may be exceeded by the length of ellispse string.'),
     ),
     'add_ellipsis' => array(
       '#type' => 'checkbox',
