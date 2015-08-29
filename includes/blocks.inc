@@ -827,6 +827,7 @@ function islandora_solr_display() {
  *   A rendered list containing Solr sort links.
  */
 function islandora_solr_sort() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
   global $_islandora_solr_queryclass;
 
   $output = '';
