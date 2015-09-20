@@ -24,6 +24,10 @@ Set the 'Solr URL' and select a 'Request handler' in Administration » Islandora
 
 Islandora Solr Search offers many more configuration options in Administration » Islandora » Solr Index » Solr settings (admin/islandora/search/islandora_solr/settings).
 
+## Documentation
+
+Further documentation for this module is available at [our wiki](https://wiki.duraspace.org/display/ISLANDORA/Islandora+Solr+Search).
+
 ## Troubleshooting/Issues
  
  Having problems or solved a problem? Check out the Islandora google groups for a solution.
@@ -41,15 +45,19 @@ Q: Why can't I connect to Solr via https?
 
 A: The Apache Solr PHP Client that we use does not support https connections to Solr. [ISLANDORA-646](https://jira.duraspace.org/browse/ISLANDORA-646) seeks to remedy this.
 
+Q: Advanced search on PID worked in 6.x. Why do I get no results for the same search in 7.x?
+
+A: In 7.x the colon in a PID must be escaped (i.e., islandora:34 becomes islandora\:34) or the entire query must be wrapped in quotation marks  (i,e., "islandora:34").
+
 ## Maintainers/Sponsors
 
 Current maintainers:
 
-* [Nick Ruest](https://github.com/ruebot)
+* [Jordan Dukart](https://github.com/jordandukart)
 
 ## Development
 
-If you would like to contribute to this module, please check out our helpful [Documentation for Developers](https://github.com/Islandora/islandora/wiki#wiki-documentation-for-developers) info, as well as our [Developers](http://islandora.ca/developers) section on the Islandora.ca site.
+If you would like to contribute to this module, please check out [CONTRIBUTING.md](CONTRIBUTING.md). In addition, we have helpful [Documentation for Developers](https://github.com/Islandora/islandora/wiki#wiki-documentation-for-developers) info, as well as our [Developers](http://islandora.ca/developers) section on the [Islandora.ca](http://islandora.ca) site.
 
 ## License
 
