@@ -283,10 +283,12 @@ class IslandoraSolrQueryProcessor {
       $this->solrParams['fq'][] = implode(' OR ', $namespace_array);
     }
 
-    // If no qf fields are specified in the requestHandler a default list is
-    // supplied here for dismax searches.
-    if (!islandora_solr_check_dismax() && isset($this->internalSolrParams['type']) && ($this->internalSolrParams['type'] == "dismax" || $this->internalSolrParams['type'] == "edismax")) {
-      $this->solrParams['qf'] = variable_get('islandora_solr_query_fields', 'dc.title^5 dc.subject^2 dc.description^2 dc.creator^2 dc.contributor^1 dc.type');
+    if (isset($this->internalSolrParams['type']) && ($this->internalSolrParams['type'] == "dismax" || $this->internalSolrParams['type'] == "edismax")) {
+      if (variable_get('islandora_solr_use_ui_qf', FALSE) || !islandora_solr_check_dismax()) {
+        // Put our "qf" in if we are configured to, or we have none from the
+        // request handler.
+        $this->solrParams['qf'] = variable_get('islandora_solr_query_fields', 'dc.title^5 dc.subject^2 dc.description^2 dc.creator^2 dc.contributor^1 dc.type');
+      }
     }
 
     // Invoke a hook for third-party modules to alter the parameters.
@@ -341,7 +343,7 @@ class IslandoraSolrQueryProcessor {
       $datastream_field = variable_get('islandora_solr_datastream_id_field', 'fedora_datastreams_ms');
       $object_label = variable_get('islandora_solr_object_label_field', 'fgs_label_s');
       if (!empty($object_results)) {
-        if (variable_get('islandora_solr_search_navigation', FALSE)) {
+        if (isset($this->internalSolrParams['islandora_solr_search_navigation']) && $this->internalSolrParams['islandora_solr_search_navigation']) {
           $id = bin2hex(drupal_random_bytes(10));
           $page_params = drupal_get_query_parameters();
           $search_nav_qp = $this;

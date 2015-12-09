@@ -206,7 +206,7 @@ function islandora_solr_islandora_solr_primary_display() {
       'file' => 'includes/results.inc',
       'class' => "IslandoraSolrResults",
       'function' => "displayResults",
-      'description' => t("A simple output."),
+      'description' => t("Display search results as a list view"),
     ),
   );
 }
@@ -270,6 +270,7 @@ function islandora_solr($query = NULL, $params = NULL) {
     // Unset invalid parameter.
     unset($params['display']);
   }
+  $params['islandora_solr_search_navigation'] = variable_get('islandora_solr_search_navigation', FALSE);
 
   // !!! Set the global variable. !!!
   $_islandora_solr_queryclass = new IslandoraSolrQueryProcessor();
