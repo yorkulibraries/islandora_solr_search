@@ -10,7 +10,7 @@ This module requires the following modules/libraries:
 
 * [Islandora](https://github.com/islandora/islandora)
 * [Tuque](https://github.com/islandora/tuque)
-* [Apache Solr](https://lucene.apache.org/solr/) - 1.4 or higher.
+* [Apache Solr](https://lucene.apache.org/solr/) - 4.2 or higher.
 
 ## Installation
  
