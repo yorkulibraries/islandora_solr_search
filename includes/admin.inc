@@ -522,6 +522,12 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('islandora_solr_allow_preserve_filters', FALSE),
     '#description' => t('Allow users to preserve filters when changing their search.'),
   );
+  $form['islandora_solr_tabs']['advanced_search_block']['islandora_solr_human_friendly_query_block'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Human-friendly Current Query'),
+    '#default_value' => variable_get('islandora_solr_human_friendly_query_block', TRUE),
+    '#description' => t('Use labels instead of raw field names when displaying an advanced search in the Current Query block.'),
+  );
 
   // Query defaults.
   $form['islandora_solr_tabs']['query_defaults'] = array(
@@ -545,6 +551,12 @@ function islandora_solr_admin_settings($form, &$form_state) {
       This may be used in conjunction with a background filter below.<br />
       Consider using <strong>fgs_createdDate_dt:[* TO NOW]</strong> or <strong>*:*</strong><br />'),
     '#default_value' => variable_get('islandora_solr_base_query', '*:*'),
+  );
+  $form['islandora_solr_tabs']['query_defaults']['islandora_solr_base_advanced'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use default query for empty advanced searches too'),
+    '#description' => t('When selected, an empty advanced search will perform the same as an empty simple search. If not selected, empty advanced searches will search *:*'),
+    '#default_value' => variable_get('islandora_solr_base_advanced', FALSE),
   );
   $form['islandora_solr_tabs']['query_defaults']['islandora_solr_base_sort'] = array(
     '#type' => 'textfield',
@@ -1775,8 +1787,7 @@ function islandora_solr_admin_settings_result_fields($form, &$form_state, $varia
     $form['options']['snippet']['#disabled'] = TRUE;
   }
 
-  $luke_result = islandora_solr_get_luke(NULL, $solr_field);
-  if (isset($luke_result['fields'][$solr_field]['type']) && $luke_result['fields'][$solr_field]['type'] == 'date') {
+  if (islandora_solr_is_date_field($solr_field)) {
     $form['options']['date_format'] = array(
       '#type' => 'textfield',
       '#title' => t('Date format'),
@@ -1936,8 +1947,7 @@ function islandora_solr_admin_settings_facet_fields($form, &$form_state, $variab
     '#description' => t('A human-readable name.'),
   );
 
-  $luke_result = islandora_solr_get_luke(NULL, $solr_field);
-  if (isset($luke_result['fields'][$solr_field]['type']) && $luke_result['fields'][$solr_field]['type'] == 'date') {
+  if (islandora_solr_is_date_field($solr_field)) {
     // Add in defaults, to avoid isset() tests.
     $values += array(
       'range_facet_select' => 0,
