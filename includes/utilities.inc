@@ -352,7 +352,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
               '!field' => $field,
               '!value' => islandora_solr_lesser_escape($original_value),
             ));
-            return l($formatted_value, "islandora/search/$solr_query", array(
+            return l($formatted_value, "islandora/search/" . islandora_solr_replace_slashes($solr_query), array(
               'html' => TRUE,
             ));
           };
