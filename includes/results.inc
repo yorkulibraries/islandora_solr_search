@@ -461,7 +461,7 @@ class IslandoraSolrResults {
       // XXX: We are not using l() because of active classes:
       // @see http://drupal.org/node/41595
       // Create link.
-      $breadcrumb[] = '<a' . drupal_attributes($attr) . '>' . check_plain($query_value) . '</a>'
+      $breadcrumb[] = '<a' . drupal_attributes($attr) . '>' . stripslashes(check_plain($query_value)) . '</a>'
             . '<span class="islandora-solr-breadcrumb-super"> <a' . drupal_attributes($attr_x) . '>(' . t('x') . ')</a></span>';
     }
 
@@ -472,7 +472,6 @@ class IslandoraSolrResults {
     $context = 'solr';
     drupal_alter('islandora_breadcrumbs', $breadcrumb, $context);
     drupal_set_breadcrumb($breadcrumb);
-
   }
 
   /**
