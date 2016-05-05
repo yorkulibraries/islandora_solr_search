@@ -391,7 +391,14 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
   )), drupal_get_query_parameters());
   $qp->solrStart = $page * $limit;
   $qp->solrLimit = $limit;
-  $qp->solrParams['sort'] = islandora_solr_get_collection_sort_string($collection_object->id, TRUE);
+
+  if (variable_get('islandora_solr_collection_sort_block_override', FALSE) && isset($qp->internalSolrParams['sort'])) {
+    $qp->solrParams['sort'] = $qp->internalSolrParams['sort'];
+  }
+  else {
+    $qp->solrParams['sort'] = islandora_solr_get_collection_sort_string($collection_object->id, TRUE);
+  }
+
   $qp->executeQuery();
 
   $map_to_pids = function ($result) {

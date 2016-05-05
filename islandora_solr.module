@@ -541,4 +541,11 @@ function islandora_solr_form_islandora_basic_collection_admin_alter(&$form, &$fo
     '#default_value' => variable_get('islandora_solr_individual_collection_sorting', FALSE),
     '#states' => $states,
   );
+  $form['display_generation_fieldset']['islandora_collection_display']['islandora_solr_collection_sort_block_override'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow Solr sort block to override collection sort'),
+    '#description' => t('Allows Solr sort block to override collection and default collection sort settings.'),
+    '#default_value' => variable_get('islandora_solr_collection_sort_block_override', FALSE),
+    '#states' => $states,
+  );
 }
