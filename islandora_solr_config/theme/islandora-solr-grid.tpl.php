@@ -19,11 +19,12 @@
       <dl class="solr-grid-field">
         <dt class="solr-grid-thumb">
           <?php
-            $image = '<img src="' . url($result['thumbnail_url'], array('query' => $result['thumbnail_url_params'])) . '" />';
+            $image = '<img src="' . url($result['thumbnail_url'], array('query' => $result['thumbnail_url_params'])) . '" alt="' . $result['object_label'] . '"/>';
             print l($image, $result['object_url'], array(
               'html' => TRUE,
               'query' => $result['object_url_params'],
               'fragment' => isset($result['object_url_fragment']) ? $result['object_url_fragment'] : '',
+              'attributes' => array('title' => $result['object_label']),
             ));
           ?>
         </dt>
@@ -33,6 +34,7 @@
             print l($object_label, $result['object_url'], array(
               'query' => $result['object_url_params'],
               'fragment' => isset($result['object_url_fragment']) ? $result['object_url_fragment'] : '',
+              'attributes' => array('title' => $result['object_label']),
             ));
           ?>
         </dd>
