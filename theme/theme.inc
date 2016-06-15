@@ -61,7 +61,8 @@ function islandora_solr_preprocess_islandora_solr_wrapper(&$variables) {
  *
  * Default template: theme/islandora-solr.tpl.php.
  */
-function islandora_solr_preprocess_islandora_solr(&$variables) {
+function template_preprocess_islandora_solr(&$variables) {
+
   $results = $variables['results'];
   foreach ($results as $key => $result) {
     // Thumbnail.
