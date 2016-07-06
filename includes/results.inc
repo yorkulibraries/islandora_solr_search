@@ -461,7 +461,7 @@ class IslandoraSolrResults {
       // XXX: We are not using l() because of active classes:
       // @see http://drupal.org/node/41595
       // Create link.
-      $breadcrumb[] = '<a' . drupal_attributes($attr) . '>' . check_plain($query_value) . '</a>'
+      $breadcrumb[] = '<a' . drupal_attributes($attr) . '>' . stripslashes(check_plain($query_value)) . '</a>'
             . '<span class="islandora-solr-breadcrumb-super"> <a' . drupal_attributes($attr_x) . '>(' . t('x') . ')</a></span>';
     }
 
@@ -472,7 +472,6 @@ class IslandoraSolrResults {
     $context = 'solr';
     drupal_alter('islandora_breadcrumbs', $breadcrumb, $context);
     drupal_set_breadcrumb($breadcrumb);
-
   }
 
   /**
@@ -513,11 +512,12 @@ class IslandoraSolrResults {
       $filter_split = preg_split(ISLANDORA_SOLR_QUERY_FIELD_VALUE_SPLIT_REGEX, $filter, 2);
       // Trim brackets.
       $filter_split[1] = trim($filter_split[1], "\"");
+      $solr_field = ltrim($filter_split[0], '-');
       // If value is date.
-      if (isset($islandora_solr_query->solrParams['facet.date']) && in_array(ltrim($filter_split[0], '-'), $islandora_solr_query->solrParams['facet.date'])) {
+      if (isset($islandora_solr_query->solrParams['facet.date']) && in_array($solr_field, $islandora_solr_query->solrParams['facet.date'])) {
         // Check date format setting.
         foreach ($this->rangeFacets as $value) {
-          if ($value['solr_field'] == $filter_split[0] && isset($value['solr_field_settings']['date_facet_format']) && !empty($value['solr_field_settings']['date_facet_format'])) {
+          if ($value['solr_field'] == $solr_field && isset($value['solr_field_settings']['date_facet_format']) && !empty($value['solr_field_settings']['date_facet_format'])) {
             $format = $value['solr_field_settings']['date_facet_format'];
           }
         }

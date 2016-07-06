@@ -77,6 +77,15 @@ function islandora_solr_menu() {
     'file' => 'includes/admin.inc',
     'type' => MENU_CALLBACK,
   );
+  $items['admin/islandora/search/islandora_solr/settings/confirmation'] = array(
+    'title' => 'Default settings restore',
+    'description' => 'Confirmation form to confirm defualt settings restore',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_solr_admin_settings_default_confirm_form'),
+    'access arguments' => array('administer islandora solr'),
+    'file' => 'includes/admin.inc',
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -530,6 +539,13 @@ function islandora_solr_form_islandora_basic_collection_admin_alter(&$form, &$fo
     '#title' => t('Allow individual sort strings per-collection'),
     '#description' => t('Allows per-collection sort strings to be configured. These sort strings can be set on the collection configuration page for individual collection objects.'),
     '#default_value' => variable_get('islandora_solr_individual_collection_sorting', FALSE),
+    '#states' => $states,
+  );
+  $form['display_generation_fieldset']['islandora_collection_display']['islandora_solr_collection_sort_block_override'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow Solr sort block to override collection sort'),
+    '#description' => t('Allows Solr sort block to override collection and default collection sort settings.'),
+    '#default_value' => variable_get('islandora_solr_collection_sort_block_override', FALSE),
     '#states' => $states,
   );
 }

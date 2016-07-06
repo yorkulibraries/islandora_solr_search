@@ -43,7 +43,7 @@ function islandora_solr_config_islandora_solr_secondary_display() {
       'file' => 'includes/csv_results.inc',
       'class' => 'IslandoraSolrResultsCSV',
       'function' => 'printCSV',
-      'description' => 'Download complete resultset as a CSV Spreadsheet',
+      'description' => t("Download complete resultset as a CSV Spreadsheet"),
       'logo' => '<i class="fa fa-file fa-2x"></i>',
     ),
     'rss' => array(
@@ -52,7 +52,7 @@ function islandora_solr_config_islandora_solr_secondary_display() {
       'file' => 'includes/rss_results.inc',
       'class' => 'IslandoraSolrResultsRSS',
       'function' => 'printRSS',
-      'description' => 'Show search results as RSS feed',
+      'description' => t("Show search results as RSS feed"),
       'logo' => '<i class="fa fa-rss fa-2x"></i>',
     ),
   );
