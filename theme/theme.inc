@@ -27,7 +27,7 @@
  * @see islandora_solr_theme()
  * @see IslandoraSolrResults::displayResults()
  */
-function islandora_solr_preprocess_islandora_solr_wrapper(&$variables) {
+function template_preprocess_islandora_solr_wrapper(&$variables) {
   global $base_url;
   $variables['base_url'] = $base_url;
 
@@ -61,7 +61,8 @@ function islandora_solr_preprocess_islandora_solr_wrapper(&$variables) {
  *
  * Default template: theme/islandora-solr.tpl.php.
  */
-function islandora_solr_preprocess_islandora_solr(&$variables) {
+function template_preprocess_islandora_solr(&$variables) {
+
   $results = $variables['results'];
   foreach ($results as $key => $result) {
     // Thumbnail.
@@ -93,7 +94,7 @@ function islandora_solr_preprocess_islandora_solr(&$variables) {
  *
  * Default template: theme/islandora-solr-facet.tpl.php.
  */
-function islandora_solr_preprocess_islandora_solr_facet(&$variables) {
+function template_preprocess_islandora_solr_facet(&$variables) {
   $buckets = $variables['buckets'];
   if ($variables['hidden']) {
     $variables['classes_array'][] = 'hidden';
