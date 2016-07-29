@@ -663,6 +663,15 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#description' => t('Dumps Solr queries to the screen for testing. Warning: if you have the Drupal Apache Solr module enabled alongside this one, the debug function will not work.'),
     '#weight' => 6,
   );
+  // Luke timeout.
+  $form['islandora_solr_tabs']['other']['islandora_solr_luke_timeout'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Solr Luke timeout'),
+    '#size' => 10,
+    '#description' => t("Number of seconds to set timeout for retrieving fields from Solr's Luke interface. Increase this if autocomplete fields containing Solr field names time out."),
+    '#default_value' => variable_get('islandora_solr_luke_timeout', '45'),
+    '#required' => TRUE,
+  );
 
   // The content of the popup dialog.
   $form['islandora_solr_admin_dialog'] = array(
