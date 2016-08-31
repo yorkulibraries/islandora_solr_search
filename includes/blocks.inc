@@ -1021,7 +1021,7 @@ function islandora_solr_search_navigation() {
         $next_solr_object = $next_objects[$next_offset];
       }
     }
-
+    $query_processor->islandoraSolrResult = NULL;
     $return_link = NULL;
     $prev_link = NULL;
     $next_link = NULL;
