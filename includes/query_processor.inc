@@ -350,7 +350,11 @@ class IslandoraSolrQueryProcessor {
           $search_nav_qp->islandoraSolrResult = NULL;
           $_SESSION['islandora_solr_search_nav_params'][$id] = array(
             'path' => current_path(),
-            'query_processor' => $search_nav_qp,
+            'query' => $this->solrQuery,
+            'query_internal' => $this->internalSolrQuery,
+            'limit' => $this->solrLimit,
+            'params' => $this->solrParams,
+            'params_internal' => $this->internalSolrParams,
           );
 
           $url_params = array(
