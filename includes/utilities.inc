@@ -538,11 +538,11 @@ function islandora_solr_is_date_field($solr_field) {
 /**
  * Removes the base filters from the Solr params if they exist.
  *
- * @var array $params
- *    The Solr params array.
+ * @param array $params
+ *   The Solr params array.
  *
  * @return array
- *    The $params array minus any base filters.
+ *   The $params array minus any base filters.
  */
 function islandora_solr_remove_base_filters(array $params) {
   if (is_array($params) && isset($params['fq'])) {
