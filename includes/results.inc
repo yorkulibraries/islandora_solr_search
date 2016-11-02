@@ -870,12 +870,15 @@ class IslandoraSolrFacets {
     $facet_field = $this->facet_field;
     $facet_results = array();
     module_load_include('inc', 'islandora_solr', 'includes/utilities');
+    // It's possible that there could be a facet that's a date field
+    // that's not a range.
+    $date_format = isset($this->settings['solr_field_settings']['date_facet_format']) ? $date_format = $this->settings['solr_field_settings']['date_facet_format'] : FALSE;
     foreach ($results as $bucket => $count) {
       $facet_results[] = array(
         'count' => $count,
         'filter' => islandora_solr_lesser_escape($facet_field) . ':"' .
         islandora_solr_facet_escape($bucket) . '"',
-        'bucket' => $bucket,
+        'bucket' => $date_format ? format_date(strtotime($bucket), 'custom', $date_format) : $bucket,
       );
     }
     return $facet_results;
