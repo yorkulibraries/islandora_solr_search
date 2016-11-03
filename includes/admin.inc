@@ -1998,7 +1998,7 @@ function islandora_solr_admin_settings_facet_fields($form, &$form_state, $variab
       '#type' => 'textfield',
       '#title' => t('Date format'),
       '#default_value' => $values['date_facet_format'],
-      '#description' => t('The format of the date, as it will be displayed in the facet block. Use <a href="!url">PHP date()</a> formatting.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
+      '#description' => t('The format of the date, as it will be displayed in the facet block. Use <a href="!url">PHP date()</a> formatting.', array('!url' => 'http://php.net/manual/function.date.php')),
     );
 
     $form['options']['range_facet'] = array(
