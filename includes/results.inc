@@ -872,7 +872,7 @@ class IslandoraSolrFacets {
     module_load_include('inc', 'islandora_solr', 'includes/utilities');
     // It's possible that there could be a facet that's a date field
     // that's not a range.
-    $date_format = isset($this->settings['solr_field_settings']['date_facet_format']) ? $date_format = $this->settings['solr_field_settings']['date_facet_format'] : FALSE;
+    $date_format = isset($this->settings['solr_field_settings']['date_facet_format']) ? $this->settings['solr_field_settings']['date_facet_format'] : FALSE;
     foreach ($results as $bucket => $count) {
       $facet_results[] = array(
         'count' => $count,
