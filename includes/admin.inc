@@ -2111,10 +2111,10 @@ function islandora_solr_admin_settings_facet_fields($form, &$form_state, $variab
 
   $form['options']['pid_object_label'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Object Label'),
+    '#title' => t('Replace PID with Object Label'),
     '#return_value' => 1,
     '#default_value' => (isset($values['pid_object_label']) ? $values['pid_object_label'] : 0),
-    '#description' => t('Replace PID with object Label.'),
+    '#description' => t("Replace a PID (islandora:foo) or a URI (info:fedora/islandora:foo) with that object's label. Will only work with non-tokenized Solr fields (full literal strings)."),
   );
 
   return $form;
