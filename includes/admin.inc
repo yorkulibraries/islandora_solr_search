@@ -392,8 +392,15 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Results per page'),
     '#size' => 5,
-    '#description' => t('The number of results to show per page.'),
+    '#description' => t('Default number of results to show per page.'),
     '#default_value' => variable_get('islandora_solr_num_of_results', '20'),
+  );
+  $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_num_of_results_advanced'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Advanced results per page'),
+    '#size' => 5,
+    '#description' => t('Comma seperated list of integers to increase or decrease results per page.'),
+    '#default_value' => implode(',', variable_get('islandora_solr_num_of_results_advanced', array())),
   );
   $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_search_navigation'] = array(
     '#type' => 'checkbox',
@@ -1186,7 +1193,8 @@ function theme_islandora_solr_admin_primary_display($variables) {
  *   The form state.
  */
 function _islandora_solr_admin_settings_validate($form, &$form_state) {
-
+  $limits = explode(',', $form_state['values']['islandora_solr_num_of_results_advanced']);
+  $form_state['values']['islandora_solr_num_of_results_advanced'] = array_filter(array_map('trim', $limits), 'is_numeric');
   $form_state['values']['islandora_solr_namespace_restriction'] = preg_replace('/:$/', '', $form_state['values']['islandora_solr_namespace_restriction']);
 }
 
