@@ -17,6 +17,7 @@ class IslandoraSolrResults {
   public $allSubsArray = array();
   public $islandoraSolrQueryProcessor;
   public $rangeFacets = array();
+  public $dateFormatFacets = array();
 
   /**
    * Constructor.
@@ -24,6 +25,7 @@ class IslandoraSolrResults {
   public function __construct() {
     $this->prepFieldSubstitutions();
     $this->rangeFacets = islandora_solr_get_range_facets();
+    $this->dateFormatFacets = islandora_solr_get_date_format_facets();
   }
 
   /**
@@ -527,6 +529,10 @@ class IslandoraSolrResults {
         $filter_str = trim($filter_str, ']');
         $filter_array = explode(' TO ', $filter_str);
         $filter_split[1] = format_date(strtotime(trim($filter_array[0])) + (60 * 60 * 24), 'custom', $format) . ' - ' . format_date(strtotime(trim($filter_array[1])) + (60 * 60 * 24), 'custom', $format);
+      }
+      elseif (isset($this->dateFormatFacets[$solr_field])) {
+        $format = $this->dateFormatFacets[$solr_field]['solr_field_settings']['date_facet_format'];
+        $filter_split[1] = format_date(strtotime(stripslashes($filter_split[1])), 'custom', $format);
       }
       $filter_string = $filter_split[1];
     }
