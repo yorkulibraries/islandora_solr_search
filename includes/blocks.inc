@@ -1102,6 +1102,7 @@ function islandora_solr_search_results_limit() {
       $attr['rel'] = 'nofollow';
       $query = $params;
       $query['limit'] = $limit;
+      unset($query['page']);
       $attr['href'] = url($path, array('query' => $query));
       // XXX: We're not using l() because of
       // @link http://drupal.org/node/41595 active classes. @endlink
