@@ -1825,7 +1825,7 @@ function islandora_solr_admin_settings_result_fields($form, &$form_state, $varia
       '#type' => 'textfield',
       '#title' => t('Date format'),
       '#default_value' => isset($values['date_format']) ? $values['date_format'] : '',
-      '#description' => t('The format of the date, as it will be displayed in the search results. Use <a href="!url" target="_blank">PHP date()</a> formatting.', array('!url' => 'http://php.net/manual/function.date.php')),
+      '#description' => t('The format of the date, as it will be displayed in the search results. Use <a href="!url" target="_blank">PHP date()</a> formatting. Works best when the date format matches the granularity of the source data. Otherwise it is possible that there will be duplicates displayed.', array('!url' => 'http://php.net/manual/function.date.php')),
     );
   }
 
@@ -1994,6 +1994,13 @@ function islandora_solr_admin_settings_facet_fields($form, &$form_state, $variab
       'date_filter_datepicker_enabled' => 0,
       'date_filter_datepicker_range' => '-100:+3',
     );
+    $form['options']['date_facet_format'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Date format'),
+      '#default_value' => $values['date_facet_format'],
+      '#description' => t('The format of the date, as it will be displayed in the facet block. Use <a href="!url">PHP date()</a> formatting. Works best when the date format matches the granularity of the source data. Otherwise it is possible that there will be duplicates displayed.', array('!url' => 'http://php.net/manual/function.date.php')),
+    );
+
     $form['options']['range_facet'] = array(
       '#type' => 'fieldset',
       '#id' => 'range-facet-wrapper',
@@ -2044,13 +2051,6 @@ function islandora_solr_admin_settings_facet_fields($form, &$form_state, $variab
       '#default_value' => $values['range_facet_gap'],
       '#description' => t('The size of each date range, expressed as an interval to be added to the lower bound using the <a href="!url">DateMathParser</a> syntax.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
     );
-    $form['options']['range_facet']['wrapper']['date_facet_format'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Date format'),
-      '#default_value' => $values['date_facet_format'],
-      '#description' => t('The format of the date, as it will be displayed in the facet block. Use <a href="!url">PHP date()</a> formatting.', array('!url' => 'http://lucene.apache.org/solr/api/org/apache/solr/util/DateMathParser.html')),
-    );
-
     // Range slider.
     $form['options']['range_facet']['wrapper']['range_slider'] = array(
       '#type' => 'fieldset',
