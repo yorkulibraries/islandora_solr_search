@@ -1085,37 +1085,42 @@ function islandora_solr_search_navigation() {
  *   The rendered html for the block content.
  */
 function islandora_solr_search_results_limit() {
-  $default_limit = variable_get('islandora_solr_num_of_results', '20');
-  $limits = variable_get('islandora_solr_num_of_results_advanced', array());
-  $params = drupal_get_query_parameters();
-  $path = current_path();
-  if (isset($params['limit']) && is_numeric($params['limit'])) {
-    $default_limit = $params['limit'];
-  }
-  $limit_list = array();
-  foreach ($limits as $limit) {
-    if ($limit == $default_limit) {
-      $limit_list[] = $limit;
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  global $_islandora_solr_queryclass;
+  // Check if the page is dealing with search results.
+  if (islandora_solr_results_page($_islandora_solr_queryclass)) {
+    $default_limit = variable_get('islandora_solr_num_of_results', '20');
+    $limits = variable_get('islandora_solr_num_of_results_advanced', array());
+    $params = drupal_get_query_parameters();
+    $path = current_path();
+    if (isset($params['limit']) && is_numeric($params['limit'])) {
+      $default_limit = $params['limit'];
     }
-    else {
-      $attr = array();
-      $attr['rel'] = 'nofollow';
-      $query = $params;
-      $query['limit'] = $limit;
-      unset($query['page']);
-      $attr['href'] = url($path, array('query' => $query));
-      // XXX: We're not using l() because of
-      // @link http://drupal.org/node/41595 active classes. @endlink
-      $limit_list[] = '<a' . drupal_attributes($attr) . '>' . $limit . '</a>';
+    $limit_list = array();
+    foreach ($limits as $limit) {
+      if ($limit == $default_limit) {
+        $limit_list[] = $limit;
+      }
+      else {
+        $attr = array();
+        $attr['rel'] = 'nofollow';
+        $query = $params;
+        $query['limit'] = $limit;
+        unset($query['page']);
+        $attr['href'] = url($path, array('query' => $query));
+        // XXX: We're not using l() because of
+        // @link http://drupal.org/node/41595 active classes. @endlink
+        $limit_list[] = '<a' . drupal_attributes($attr) . '>' . $limit . '</a>';
+      }
     }
-  }
 
-  if (!empty($limit_list)) {
-    return theme('item_list', array(
-      'items' => $limit_list,
-      'title' => NULL,
-      'type' => 'ul',
-      'attributes' => array('id' => 'islandora_solr_results_limit'),
-    ));
+    if (!empty($limit_list)) {
+      return theme('item_list', array(
+        'items' => $limit_list,
+        'title' => NULL,
+        'type' => 'ul',
+        'attributes' => array('id' => 'islandora_solr_results_limit'),
+      ));
+    }
   }
 }
