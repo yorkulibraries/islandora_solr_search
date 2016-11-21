@@ -1085,7 +1085,6 @@ function islandora_solr_search_navigation() {
  *   The rendered html for the block content.
  */
 function islandora_solr_search_results_limit() {
-  module_load_include('inc', 'islandora', 'includes/utilities');
   global $_islandora_solr_queryclass;
   // Check if the page is dealing with search results.
   if (islandora_solr_results_page($_islandora_solr_queryclass)) {
