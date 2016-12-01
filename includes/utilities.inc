@@ -545,7 +545,7 @@ function islandora_solr_is_date_field($solr_field) {
  *   The $params array minus any base filters.
  */
 function islandora_solr_remove_base_filters(array $params) {
-  if (is_array($params) && isset($params['fq'])) {
+  if (isset($params['fq'])) {
     $base_filters = preg_split("/\\r\\n|\\n|\\r/", variable_get('islandora_solr_base_filter', ''), -1, PREG_SPLIT_NO_EMPTY);
     $params['fq'] = array_diff($params['fq'], $base_filters);
   }
