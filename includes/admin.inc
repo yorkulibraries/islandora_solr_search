@@ -408,6 +408,13 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#description' => t('Add navigation params to object links.'),
     '#default_value' => variable_get('islandora_solr_search_navigation', FALSE),
   );
+  $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_search_field_value_separator'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Field value separator'),
+    '#description' => t('Characters to separate values in multivalued fields.'),
+    '#default_value' => variable_get('islandora_solr_search_field_value_separator', ''),
+  );
+
 
   // Sort settings.
   $form['islandora_solr_tabs']['sort'] = array(
