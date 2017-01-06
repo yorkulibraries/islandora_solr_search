@@ -1212,6 +1212,10 @@ function _islandora_solr_admin_settings_validate($form, &$form_state) {
   $limits = explode(',', $form_state['values']['islandora_solr_num_of_results_advanced']);
   $form_state['values']['islandora_solr_num_of_results_advanced'] = array_filter(array_map('trim', $limits), 'is_numeric');
   $form_state['values']['islandora_solr_namespace_restriction'] = preg_replace('/:$/', '', $form_state['values']['islandora_solr_namespace_restriction']);
+  
+  if (empty($form_state['values']['islandora_solr_search_field_value_separator'])) {
+    $form_state['values']['islandora_solr_search_field_value_separator'] = NULL;
+  } 
 }
 
 /**
