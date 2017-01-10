@@ -342,7 +342,11 @@ function islandora_solr_prepare_solr_results($solr_results) {
           'url' => $object_result['object_url'],
           'options' => $options,
         );
-        $value = islandora_solr_truncate_field_display($value, $truncate_length[$field]['maximum_length'], $truncate_length[$field]['add_ellipsis'], $truncate_length[$field]['wordsafe'], $truncate_length[$field]['wordsafe_length'], variable_get('islandora_solr_search_field_value_separator', '<br />'), $link_options);
+        $separator = variable_get('islandora_solr_search_field_value_separator', '');
+        if (empty($separator)) {
+          $separator = '<br />';
+        }
+        $value = islandora_solr_truncate_field_display($value, $truncate_length[$field]['maximum_length'], $truncate_length[$field]['add_ellipsis'], $truncate_length[$field]['wordsafe'], $truncate_length[$field]['wordsafe_length'], filter_xss($separator, array('br')), $link_options);
       }
       else {
         // Add link to search.
@@ -363,8 +367,12 @@ function islandora_solr_prepare_solr_results($solr_results) {
         }
       }
 
+      $separator = variable_get('islandora_solr_search_field_value_separator', '');
+      if (empty($separator)) {
+        $separator = ', ';
+      }
       // Implode.
-      $value = is_array($value) ? implode(variable_get('islandora_solr_search_field_value_separator', ', '), $value) : $value;
+      $value = is_array($value) ? implode(filter_xss($separator, array('br')), $value) : $value;
       $solr_doc[$field] = $value;
     }
     // Replace Solr doc rows.
@@ -505,14 +513,12 @@ function islandora_solr_truncate_field_display($display_values, $max_length, $ad
 
     $updated_display_values
       = "<span class='toggle-wrapper'>" .
-      t("<span>!value !show_more</span>", array(
-        '!separator' => $separator,
+      t("<span>!value !show_more <br /></span>", array(
         '!value' => $truncated_value,
         '!show_more' => ($value_is_truncated ? "<a href='#' class='toggler'>Show more</a>" : ""),
       ));
     if ($value_is_truncated) {
       $updated_display_values .= t("<span>!original_value <a href='#' class='toggler'>Show less</a></span>", array(
-        '!separator' => $separator,
         '!original_value' => $original_value,
       ));
     }
