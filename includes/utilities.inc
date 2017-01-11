@@ -513,12 +513,12 @@ function islandora_solr_truncate_field_display($display_values, $max_length, $ad
 
     $updated_display_values
       = "<span class='toggle-wrapper'>" .
-      t("<span>!value !show_more <br /></span>", array(
+      t("<span>!value <br />!show_more</span>", array(
         '!value' => $truncated_value,
         '!show_more' => ($value_is_truncated ? "<a href='#' class='toggler'>Show more</a>" : ""),
       ));
     if ($value_is_truncated) {
-      $updated_display_values .= t("<span>!original_value <a href='#' class='toggler'>Show less</a></span>", array(
+      $updated_display_values .= t("<span>!original_value <br /><a href='#' class='toggler'>Show less</a></span>", array(
         '!original_value' => $original_value,
       ));
     }
