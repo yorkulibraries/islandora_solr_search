@@ -412,9 +412,16 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Field value separator'),
     '#description' => t('Characters to separate values in multivalued fields.'),
-    '#default_value' => variable_get('islandora_solr_search_field_value_separator', ''),
+    '#default_value' => variable_get('islandora_solr_search_field_value_separator', ', '),
+    '#required' => TRUE,
   );
-
+  $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_search_truncated_field_value_separator'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Truncated field value separator'),
+    '#description' => t('Characters to separate truncated values in multivalued fields.'),
+    '#default_value' => variable_get('islandora_solr_search_truncated_field_value_separator', "\n"),
+    '#required' => TRUE,
+  );
   // Sort settings.
   $form['islandora_solr_tabs']['sort'] = array(
     '#type' => 'fieldset',

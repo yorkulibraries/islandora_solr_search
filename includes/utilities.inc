@@ -304,6 +304,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
 
     foreach ($solr_doc as $field => $original_value) {
       $value = (array) $original_value;
+      $separator = array_key_exists($field, $truncate_length) ? variable_get('islandora_solr_search_truncated_field_value_separator', "\n") : variable_get('islandora_solr_search_field_value_separator', ', ');
       // Date formatting.
       if (isset($date_format[$field])) {
         $map_date_format = function ($value) use ($date_format, $field) {
@@ -331,7 +332,6 @@ function islandora_solr_prepare_solr_results($solr_results) {
         };
         array_walk($value, $truncate_func);
       }
-
       // Truncate output based on the field rather than by value.
       if (array_key_exists($field, $truncate_length) && $truncate_length[$field]['maximum_length'] > 0 && isset($truncate_length[$field]['truncation_type']) && $truncate_length[$field]['truncation_type'] == 'whole_field_option') {
         // Handle linking and truncating together.
@@ -342,11 +342,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
           'url' => $object_result['object_url'],
           'options' => $options,
         );
-        $separator = variable_get('islandora_solr_search_field_value_separator', '');
-        if (empty($separator)) {
-          $separator = '<br />';
-        }
-        $value = islandora_solr_truncate_field_display($value, $truncate_length[$field]['maximum_length'], $truncate_length[$field]['add_ellipsis'], $truncate_length[$field]['wordsafe'], $truncate_length[$field]['wordsafe_length'], filter_xss($separator, array('br')), $link_options);
+        $value = islandora_solr_truncate_field_display($value, $truncate_length[$field]['maximum_length'], $truncate_length[$field]['add_ellipsis'], $truncate_length[$field]['wordsafe'], $truncate_length[$field]['wordsafe_length'], $separator, $link_options);
       }
       else {
         // Add link to search.
@@ -367,10 +363,6 @@ function islandora_solr_prepare_solr_results($solr_results) {
         }
       }
 
-      $separator = variable_get('islandora_solr_search_field_value_separator', '');
-      if (empty($separator)) {
-        $separator = ', ';
-      }
       // Implode.
       $value = is_array($value) ? implode(filter_xss($separator, array('br')), $value) : $value;
       $solr_doc[$field] = $value;
@@ -397,16 +389,6 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
     '!pid' => $collection_object->id,
     '!collection_member_field' => variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms'),
   )), drupal_get_query_parameters());
-
-  if (variable_get('islandora_solr_collection_result_limit_block_override', FALSE)) {
-    if (isset($qp->internalSolrParams['limit'])) {
-      $limit = $qp->internalSolrParams['limit'];
-    }
-    else {
-      $limit = variable_get('islandora_solr_num_of_results', '20');
-    }
-  }
-
   $qp->solrStart = $page * $limit;
   $qp->solrLimit = $limit;
 
@@ -456,6 +438,8 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
  */
 function islandora_solr_truncate_field_display($display_values, $max_length, $add_ellipsis, $word_safe, $wordsafe_length, $separator, $link_options = NULL) {
   $updated_display_values = $display_values;
+  $separator = filter_xss($separator, array('br'));
+
   if (count($updated_display_values) > 0) {
     $value_is_truncated = FALSE;
     $mod_path = drupal_get_path('module', 'islandora_solr');
