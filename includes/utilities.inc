@@ -285,6 +285,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
   $truncate_length = islandora_solr_get_truncate_length_fields();
   $link_to_search = islandora_solr_get_link_to_search_fields();
   $date_format = islandora_solr_get_date_format_fields();
+  $allowed_tags = array('ul', 'ol', 'li', 'br', 'span', 'div');
 
   // Loop over object results.
   foreach ($object_results as $object_index => $object_result) {
@@ -304,7 +305,8 @@ function islandora_solr_prepare_solr_results($solr_results) {
 
     foreach ($solr_doc as $field => $original_value) {
       $value = (array) $original_value;
-      $separator = array_key_exists($field, $truncate_length) ? variable_get('islandora_solr_search_truncated_field_value_separator', "\n") : variable_get('islandora_solr_search_field_value_separator', ', ');
+      // If value is truncated, use the truncated value separator.
+      $separator = array_key_exists($field, $truncate_length) ? variable_get('islandora_solr_search_truncated_field_value_separator', "<br />") : variable_get('islandora_solr_search_field_value_separator', ', ');
       // Date formatting.
       if (isset($date_format[$field])) {
         $map_date_format = function ($value) use ($date_format, $field) {
@@ -364,7 +366,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
       }
 
       // Implode.
-      $value = is_array($value) ? implode(filter_xss($separator, array('br')), $value) : $value;
+      $value = is_array($value) ? implode(filter_xss($separator, $allowed_tags), $value) : $value;
       $solr_doc[$field] = $value;
     }
     // Replace Solr doc rows.
