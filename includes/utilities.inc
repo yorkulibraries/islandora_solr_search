@@ -285,7 +285,23 @@ function islandora_solr_prepare_solr_results($solr_results) {
   $truncate_length = islandora_solr_get_truncate_length_fields();
   $link_to_search = islandora_solr_get_link_to_search_fields();
   $date_format = islandora_solr_get_date_format_fields();
-  $allowed_tags = array('ul', 'ol', 'li', 'br', 'span', 'div');
+  $allowed_tags = array(
+    'a',
+    'em',
+    'strong',
+    'cite',
+    'blockquote',
+    'code',
+    'ul',
+    'ol',
+    'li',
+    'dl',
+    'dt',
+    'dd',
+    'br',
+    'span',
+    'div',
+  );
 
   // Loop over object results.
   foreach ($object_results as $object_index => $object_result) {
@@ -305,8 +321,23 @@ function islandora_solr_prepare_solr_results($solr_results) {
 
     foreach ($solr_doc as $field => $original_value) {
       $value = (array) $original_value;
+
       // If value is truncated, use the truncated value separator.
-      $separator = array_key_exists($field, $truncate_length) ? variable_get('islandora_solr_search_truncated_field_value_separator', "<br />") : variable_get('islandora_solr_search_field_value_separator', ', ');
+      if (array_key_exists($field, $truncate_length)) {
+        $separator = variable_get('islandora_solr_search_truncated_field_value_separator', "<br />");
+
+        if (empty($separator)) {
+          $separator = "<br />";
+        }
+      }
+      else {
+        $separator = variable_get('islandora_solr_search_field_value_separator', ', ');
+
+        if (empty($separator)) {
+          $separator = ', ';
+        }
+      }
+
       // Date formatting.
       if (isset($date_format[$field])) {
         $map_date_format = function ($value) use ($date_format, $field) {
@@ -449,15 +480,25 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
  *   The updated display values.
  */
 function islandora_solr_truncate_field_display($display_values, $max_length, $add_ellipsis, $word_safe, $wordsafe_length, $separator, $link_options = NULL) {
-  $updated_display_values = $display_values;
-  $separator = filter_xss($separator, array(
+  $allowed_tags = array(
+    'a',
+    'em',
+    'strong',
+    'cite',
+    'blockquote',
+    'code',
     'ul',
     'ol',
     'li',
+    'dl',
+    'dt',
+    'dd',
     'br',
     'span',
     'div',
-  ));
+  );
+  $updated_display_values = $display_values;
+  $separator = filter_xss($separator, $allowed_tags);
 
   if (count($updated_display_values) > 0) {
     $value_is_truncated = FALSE;
