@@ -450,7 +450,14 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
  */
 function islandora_solr_truncate_field_display($display_values, $max_length, $add_ellipsis, $word_safe, $wordsafe_length, $separator, $link_options = NULL) {
   $updated_display_values = $display_values;
-  $separator = filter_xss($separator, array('br'));
+  $separator = filter_xss($separator, array(
+    'ul',
+    'ol',
+    'li',
+    'br',
+    'span',
+    'div',
+  ));
 
   if (count($updated_display_values) > 0) {
     $value_is_truncated = FALSE;
