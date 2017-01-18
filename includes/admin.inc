@@ -417,7 +417,7 @@ function islandora_solr_admin_settings($form, &$form_state) {
   $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_search_truncated_field_value_separator'] = array(
     '#type' => 'textfield',
     '#title' => t('Truncated field value separator'),
-    '#description' => t('Characters to separate truncated values in multivalued fields. If left empty it will default to line break.<br /><strong>Note:</strong> only used for separate value truncation option.'),
+    '#description' => t('Characters to separate truncated values in multivalued fields. If left empty it will default to line break.'),
     '#default_value' => variable_get('islandora_solr_search_truncated_field_value_separator', "<br />"),
   );
   // Sort settings.
