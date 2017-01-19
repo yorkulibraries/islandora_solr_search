@@ -285,23 +285,6 @@ function islandora_solr_prepare_solr_results($solr_results) {
   $truncate_length = islandora_solr_get_truncate_length_fields();
   $link_to_search = islandora_solr_get_link_to_search_fields();
   $date_format = islandora_solr_get_date_format_fields();
-  $allowed_tags = array(
-    'a',
-    'em',
-    'strong',
-    'cite',
-    'blockquote',
-    'code',
-    'ul',
-    'ol',
-    'li',
-    'dl',
-    'dt',
-    'dd',
-    'br',
-    'span',
-    'div',
-  );
 
   // Loop over object results.
   foreach ($object_results as $object_index => $object_result) {
@@ -395,9 +378,8 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $value = l(implode($value), $object_result['object_url'], $options);
         }
       }
-
       // Implode.
-      $value = is_array($value) ? implode(filter_xss($separator, $allowed_tags), $value) : $value;
+      $value = is_array($value) ? implode(filter_xss($separator, islandora_solr_get_filter_tags()), $value) : $value;
       $solr_doc[$field] = $value;
     }
     // Replace Solr doc rows.
@@ -480,25 +462,8 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
  *   The updated display values.
  */
 function islandora_solr_truncate_field_display($display_values, $max_length, $add_ellipsis, $word_safe, $wordsafe_length, $separator, $link_options = NULL) {
-  $allowed_tags = array(
-    'a',
-    'em',
-    'strong',
-    'cite',
-    'blockquote',
-    'code',
-    'ul',
-    'ol',
-    'li',
-    'dl',
-    'dt',
-    'dd',
-    'br',
-    'span',
-    'div',
-  );
   $updated_display_values = $display_values;
-  $separator = filter_xss($separator, $allowed_tags);
+  $separator = filter_xss($separator, islandora_solr_get_filter_tags());
 
   if (count($updated_display_values) > 0) {
     $value_is_truncated = FALSE;
@@ -610,4 +575,32 @@ function islandora_solr_remove_base_filters(array $params) {
     $params['fq'] = array_diff($params['fq'], $base_filters);
   }
   return $params;
+}
+
+/**
+ * Return an array of html tags to filter against when preparing solr display.
+ *
+ * @return array
+ *   The array of html tags being filtered against.
+ */
+function islandora_solr_get_filter_tags() {
+  $filter_tags = array(
+    'a',
+    'em',
+    'strong',
+    'cite',
+    'blockquote',
+    'code',
+    'ul',
+    'ol',
+    'li',
+    'dl',
+    'dt',
+    'dd',
+    'br',
+    'span',
+    'div',
+  );
+
+  return $filter_tags;
 }
