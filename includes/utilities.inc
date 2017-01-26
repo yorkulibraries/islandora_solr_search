@@ -304,6 +304,23 @@ function islandora_solr_prepare_solr_results($solr_results) {
 
     foreach ($solr_doc as $field => $original_value) {
       $value = (array) $original_value;
+
+      // If value is truncated, use the truncated value separator.
+      if (array_key_exists($field, $truncate_length)) {
+        $separator = variable_get('islandora_solr_search_truncated_field_value_separator', "<br />");
+
+        if (empty($separator)) {
+          $separator = "<br />";
+        }
+      }
+      else {
+        $separator = variable_get('islandora_solr_search_field_value_separator', ', ');
+
+        if (empty($separator)) {
+          $separator = ', ';
+        }
+      }
+
       // Date formatting.
       if (isset($date_format[$field])) {
         $map_date_format = function ($value) use ($date_format, $field) {
@@ -331,7 +348,6 @@ function islandora_solr_prepare_solr_results($solr_results) {
         };
         array_walk($value, $truncate_func);
       }
-
       // Truncate output based on the field rather than by value.
       if (array_key_exists($field, $truncate_length) && $truncate_length[$field]['maximum_length'] > 0 && isset($truncate_length[$field]['truncation_type']) && $truncate_length[$field]['truncation_type'] == 'whole_field_option') {
         // Handle linking and truncating together.
@@ -342,7 +358,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
           'url' => $object_result['object_url'],
           'options' => $options,
         );
-        $value = islandora_solr_truncate_field_display($value, $truncate_length[$field]['maximum_length'], $truncate_length[$field]['add_ellipsis'], $truncate_length[$field]['wordsafe'], $truncate_length[$field]['wordsafe_length'], "<br />", $link_options);
+        $value = islandora_solr_truncate_field_display($value, $truncate_length[$field]['maximum_length'], $truncate_length[$field]['add_ellipsis'], $truncate_length[$field]['wordsafe'], $truncate_length[$field]['wordsafe_length'], $separator, $link_options);
       }
       else {
         // Add link to search.
@@ -362,9 +378,8 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $value = l(implode($value), $object_result['object_url'], $options);
         }
       }
-
       // Implode.
-      $value = is_array($value) ? implode(", ", $value) : $value;
+      $value = is_array($value) ? implode(filter_xss($separator, islandora_solr_get_filter_tags()), $value) : $value;
       $solr_doc[$field] = $value;
     }
     // Replace Solr doc rows.
@@ -389,6 +404,16 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
     '!pid' => $collection_object->id,
     '!collection_member_field' => variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms'),
   )), drupal_get_query_parameters());
+
+  if (variable_get('islandora_solr_collection_result_limit_block_override', FALSE)) {
+    if (isset($qp->internalSolrParams['limit'])) {
+      $limit = $qp->internalSolrParams['limit'];
+    }
+    else {
+      $limit = variable_get('islandora_solr_num_of_results', '20');
+    }
+  }
+
   $qp->solrStart = $page * $limit;
   $qp->solrLimit = $limit;
 
@@ -438,6 +463,8 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
  */
 function islandora_solr_truncate_field_display($display_values, $max_length, $add_ellipsis, $word_safe, $wordsafe_length, $separator, $link_options = NULL) {
   $updated_display_values = $display_values;
+  $separator = filter_xss($separator, islandora_solr_get_filter_tags());
+
   if (count($updated_display_values) > 0) {
     $value_is_truncated = FALSE;
     $mod_path = drupal_get_path('module', 'islandora_solr');
@@ -495,14 +522,12 @@ function islandora_solr_truncate_field_display($display_values, $max_length, $ad
 
     $updated_display_values
       = "<span class='toggle-wrapper'>" .
-      t("<span>!value !separator !show_more</span>", array(
-        '!separator' => $separator,
+      t("<span>!value <br />!show_more</span>", array(
         '!value' => $truncated_value,
         '!show_more' => ($value_is_truncated ? "<a href='#' class='toggler'>Show more</a>" : ""),
       ));
     if ($value_is_truncated) {
-      $updated_display_values .= t("<span>!original_value !separator<a href='#' class='toggler'>Show less</a></span>", array(
-        '!separator' => $separator,
+      $updated_display_values .= t("<span>!original_value <br /><a href='#' class='toggler'>Show less</a></span>", array(
         '!original_value' => $original_value,
       ));
     }
@@ -533,4 +558,49 @@ function islandora_solr_is_date_field($solr_field) {
     return in_array($class, $date_types);
   }
   return FALSE;
+}
+
+/**
+ * Removes the base filters from the Solr params if they exist.
+ *
+ * @param array $params
+ *   The Solr params array.
+ *
+ * @return array
+ *   The $params array minus any base filters.
+ */
+function islandora_solr_remove_base_filters(array $params) {
+  if (isset($params['fq'])) {
+    $base_filters = preg_split("/\\r\\n|\\n|\\r/", variable_get('islandora_solr_base_filter', ''), -1, PREG_SPLIT_NO_EMPTY);
+    $params['fq'] = array_diff($params['fq'], $base_filters);
+  }
+  return $params;
+}
+
+/**
+ * Return an array of html tags to filter against when preparing solr display.
+ *
+ * @return array
+ *   The array of html tags being filtered against.
+ */
+function islandora_solr_get_filter_tags() {
+  $filter_tags = array(
+    'a',
+    'em',
+    'strong',
+    'cite',
+    'blockquote',
+    'code',
+    'ul',
+    'ol',
+    'li',
+    'dl',
+    'dt',
+    'dd',
+    'br',
+    'span',
+    'div',
+  );
+
+  return $filter_tags;
 }

@@ -408,7 +408,18 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#description' => t('Add navigation params to object links.'),
     '#default_value' => variable_get('islandora_solr_search_navigation', FALSE),
   );
-
+  $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_search_field_value_separator'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Field value separator'),
+    '#description' => t('Characters to separate values in multivalued fields. If left empty it will default to @value.', array('@value' => '", "')),
+    '#default_value' => variable_get('islandora_solr_search_field_value_separator', ', '),
+  );
+  $form['islandora_solr_tabs']['default_display_settings']['islandora_solr_search_truncated_field_value_separator'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Truncated field value separator'),
+    '#description' => t('Characters to separate truncated values in multivalued fields. If left empty it will default to line break.'),
+    '#default_value' => variable_get('islandora_solr_search_truncated_field_value_separator', "<br />"),
+  );
   // Sort settings.
   $form['islandora_solr_tabs']['sort'] = array(
     '#type' => 'fieldset',
