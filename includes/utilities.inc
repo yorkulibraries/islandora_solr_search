@@ -399,7 +399,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $value = array_map($map_to_link, (array) $original_value, (array) $value);
         }
         elseif (in_array($field, $link_to_object)) {
-          $value = l(implode($value), $object_result['object_url'], $options);
+          $value = l(implode($separator, $value), $object_result['object_url'], $options);
         }
       }
       // Implode.
