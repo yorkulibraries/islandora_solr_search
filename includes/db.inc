@@ -288,7 +288,6 @@ function islandora_solr_get_collection_sort_string($pid, $use_fallbacks = FALSE)
       ->fetchField();
 
     if (is_string($query)) {
-      $query = islandora_solr_set_default_collection_sort_order($query);
       return $query;
     }
   }
@@ -297,35 +296,15 @@ function islandora_solr_get_collection_sort_string($pid, $use_fallbacks = FALSE)
   if ($use_fallbacks) {
     $sort = variable_get('islandora_solr_collection_sort', '');
     if (!empty($sort)) {
-      $sort = islandora_solr_set_default_collection_sort_order($sort);
       return $sort;
     }
     $sort = variable_get('islandora_solr_base_sort', '');
     if (!empty($sort)) {
-      $sort = islandora_solr_set_default_collection_sort_order($sort);
       return $sort;
     }
   }
   // If all else fails, just don't set it at all.
   return NULL;
-}
-
-/**
- * Sets a default of ' asc' if no sort order string is provided.
- *
- * @param string $sort_setting
- *   The sort setting value to apply the default to.
- */
-function islandora_solr_set_default_collection_sort_order($sort_setting) {
-  $exploded_sort_setting = explode(',', $sort_setting);
-  foreach ($exploded_sort_setting as &$field) {
-    $field = trim($field);
-    if (!preg_match('/\s+(asc|desc)$/', $field)) {
-      $field = $field . ' asc';
-    }
-  }
-  $output = implode(',', $exploded_sort_setting);
-  return $output;
 }
 
 /**
