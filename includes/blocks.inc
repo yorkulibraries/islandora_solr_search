@@ -587,7 +587,7 @@ function islandora_solr_advanced_search_form($form, &$form_state) {
       '#type' => 'textfield',
       '#size' => 20,
       '#default_value' => (isset($value['search']) ?
-        stripslashes($value['search']) :
+        $value['search'] :
         ''),
     );
     // Used for when the user presses enter on the search field.
