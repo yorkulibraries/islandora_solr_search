@@ -538,13 +538,13 @@ function islandora_solr_advanced_search_form($form, &$form_state) {
         $value = str_replace(array('(', ')'), '', $value);
 
         if (isset($values['terms'][$i]['search'])) {
-          $values['terms'][$i]['search'] = stripslashes($values['terms'][$i]['search']);
+          $values['terms'][$i]['search'] = $values['terms'][$i]['search'];
           // Append to search string.
-          $values['terms'][$i]['search'] .= ' ' . $value;
+          $values['terms'][$i]['search'] .= ' ' . stripslashes($value);
         }
         else {
           // Search field is not set, so create new search value.
-          $values['terms'][$i]['search'] = $value;
+          $values['terms'][$i]['search'] = stripslashes($value);
         }
       }
       // If it matches AND/OR/NOT, then we have the boolean operator.
