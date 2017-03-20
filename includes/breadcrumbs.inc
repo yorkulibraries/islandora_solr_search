@@ -11,7 +11,8 @@ function islandora_solr_islandora_breadcrumbs_backends_callable($object) {
   $breadcrumbs = islandora_solr_get_breadcrumbs_recursive($object->id);
   // Pop off the current object.
   array_pop($breadcrumbs);
-  if (variable_get('islandora_solr_breadcrumbs_add_collection_query', FALSE)) {
+  $query_backend = variable_get('islandora_basic_collection_display_backend', 'islandora_basic_collection_legacy_sparql');
+  if (variable_get('islandora_solr_breadcrumbs_add_collection_query', FALSE) && $query_backend == 'islandora_solr_query_backend') {
     global $_islandora_solr_queryclass;
     if (isset($_islandora_solr_queryclass)) {
       $results = new IslandoraSolrResults();

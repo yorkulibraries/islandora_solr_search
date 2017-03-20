@@ -1091,7 +1091,7 @@ function islandora_solr_admin_breadcrumbs_settings(array $form, array &$form_sta
   $form['islandora_solr_breadcrumbs_admin']['islandora_solr_breadcrumbs_add_collection_query'] = array(
     '#type' => 'checkbox',
     '#title' => t('Append query breadcrumbs to collection breadcrumbs'),
-    '#description' => t('Appends any additional available breadcrumbs, such as facet breadcrumbs, to the standard collection hierarchy breadcrumbs.'),
+    '#description' => t('Appends any additional available breadcrumbs, such as facet breadcrumbs, to the standard collection hierarchy breadcrumbs, if using the Solr collection query backend.'),
     '#default_value' => variable_get('islandora_solr_breadcrumbs_add_collection_query', FALSE),
   );
   return system_settings_form($form);
