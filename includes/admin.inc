@@ -1088,6 +1088,12 @@ function islandora_solr_admin_breadcrumbs_settings(array $form, array &$form_sta
     one per line. Will search top to bottom and stop on the first hit.'),
     '#default_value' => variable_get('islandora_solr_breadcrumbs_parent_fields', "RELS_EXT_isMemberOfCollection_uri_ms\r\nRELS_EXT_isMemberOf_uri_ms"),
   );
+  $form['islandora_solr_breadcrumbs_admin']['islandora_solr_breadcrumbs_add_collection_query'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Append query breadcrumbs to collection breadcrumbs'),
+    '#description' => t('Appends any additional available breadcrumbs, such as facet breadcrumbs, to the standard collection hierarchy breadcrumbs.'),
+    '#default_value' => variable_get('islandora_solr_breadcrumbs_add_collection_query', FALSE),
+  );
   return system_settings_form($form);
 }
 

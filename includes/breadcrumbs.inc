@@ -11,6 +11,17 @@ function islandora_solr_islandora_breadcrumbs_backends_callable($object) {
   $breadcrumbs = islandora_solr_get_breadcrumbs_recursive($object->id);
   // Pop off the current object.
   array_pop($breadcrumbs);
+  if (variable_get('islandora_solr_breadcrumbs_add_collection_query', FALSE)) {
+    global $_islandora_solr_queryclass;
+    if (isset($_islandora_solr_queryclass)) {
+      $results = new IslandoraSolrResults();
+      $qp_breadcrumbs = $results->getBreadcrumbs($_islandora_solr_queryclass);
+      // Shift off 'Home' and the breadcrumb query predicate.
+      array_shift($qp_breadcrumbs);
+      array_shift($qp_breadcrumbs);
+      return array_merge($breadcrumbs, $qp_breadcrumbs);
+    }
+  }
   return $breadcrumbs;
 }
 

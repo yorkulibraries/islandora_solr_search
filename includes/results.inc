@@ -320,14 +320,29 @@ class IslandoraSolrResults {
   /**
    * Sets the Drupal breadcrumbs.
    *
-   * Sets the Drupal breadcrumbs based on the current query and filters.
+   * @param IslandoraSolrQueryProcessor $islandora_solr_query
+   *   The IslandoraSolrQueryProcessor object, which includes the current query
+   *   settings and the raw Solr results.
+   */
+  public function setBreadcrumbs($islandora_solr_query) {
+    $breadcrumb = $this->getBreadcrumbs();
+    drupal_set_breadcrumb($breadcrumb);
+  }
+
+  /**
+   * Gets the Drupal breadcrumbs.
+   *
+   * Gets the Drupal breadcrumbs based on the current query and filters.
    * Provides links to exclude the query or filters.
    *
    * @param IslandoraSolrQueryProcessor $islandora_solr_query
    *   The IslandoraSolrQueryProcessor object which includes the current query
    *   settings and the raw Solr results.
+   *
+   * @return array
+   *   An array of breadcrumbs.
    */
-  public function setBreadcrumbs($islandora_solr_query) {
+  public function getBreadcrumbs($islandora_solr_query) {
     // $_GET['q'] didn't seem to work here.
     $path = current_path();
     // Get date format.
@@ -474,7 +489,7 @@ class IslandoraSolrResults {
     }
     $context = 'solr';
     drupal_alter('islandora_breadcrumbs', $breadcrumb, $context);
-    drupal_set_breadcrumb($breadcrumb);
+    return $breadcrumb;
   }
 
   /**
