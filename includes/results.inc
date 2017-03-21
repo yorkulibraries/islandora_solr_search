@@ -325,7 +325,7 @@ class IslandoraSolrResults {
    *   settings and the raw Solr results.
    */
   public function setBreadcrumbs($islandora_solr_query) {
-    $breadcrumb = $this->getBreadcrumbs();
+    $breadcrumb = $this->getBreadcrumbs($islandora_solr_query);
     drupal_set_breadcrumb($breadcrumb);
   }
 
