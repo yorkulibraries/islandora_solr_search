@@ -17,10 +17,9 @@ function islandora_solr_islandora_breadcrumbs_backends_callable($object) {
     if (isset($_islandora_solr_queryclass)) {
       $results = new IslandoraSolrResults();
       $qp_breadcrumbs = $results->getBreadcrumbs($_islandora_solr_queryclass);
-      // Shift off 'Home' and the breadcrumb query predicate.
-      array_shift($qp_breadcrumbs);
-      array_shift($qp_breadcrumbs);
-      return array_merge($breadcrumbs, $qp_breadcrumbs);
+      // Slice out the first two breadcrumbs, as they are 'Home' and the
+      // breadcrumb query predicate.
+      return array_merge($breadcrumbs, array_slice($qp_breadcrumbs, 2));
     }
   }
   return $breadcrumbs;
