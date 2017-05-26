@@ -427,10 +427,19 @@ function islandora_solr_simple_search_form($form, &$form_state) {
       ),
     ),
   );
+
+  if (variable_get('islandora_solr_simple_search_label_visibility', FALSE)) {
+    $title_visible = 'invisible';
+  }
+  else {
+    $title_visible = '';
+  }
+
   $form['simple']["islandora_simple_search_query"] = array(
     '#size' => '15',
     '#type' => 'textfield',
     '#title' => t("Search Term"),
+    '#title_display' => $title_visible,
     // @todo Should this be the searched value?
     '#default_value' => '',
   );
@@ -440,7 +449,6 @@ function islandora_solr_simple_search_form($form, &$form_state) {
   );
   return $form;
 }
-
 
 /**
  * Islandora Solr simple search form submit callback.
