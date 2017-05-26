@@ -490,14 +490,14 @@ function islandora_solr_admin_settings($form, &$form_state) {
   );
 
   // Simple search block.
-  $form['islandora_solr_tabs']['simple_search_block'] = array (
+  $form['islandora_solr_tabs']['simple_search_block'] = array(
     '#type' => 'fieldset',
     '#title' => t('Simple search block'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  // Simple search block -- Specify label
+  // Simple search block -- Specify label.
   $form['islandora_solr_tabs']['simple_search_block']['islandora_solr_simple_search_label_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Simple Search Label'),
@@ -507,7 +507,7 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#required' => TRUE,
   );
 
-  // Simple search block -- hide label
+  // Simple search block -- hide label.
   $form['islandora_solr_tabs']['simple_search_block']['islandora_solr_simple_search_label_visibility'] = array(
     '#type' => 'checkbox',
     '#title' => t('Simple Search Label Visibility'),
