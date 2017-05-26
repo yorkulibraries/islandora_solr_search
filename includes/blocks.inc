@@ -428,14 +428,14 @@ function islandora_solr_simple_search_form($form, &$form_state) {
     ),
   );
 
-  if (variable_get('islandora_solr_simple_search_label_visibility') == FALSE) {
+  if (variable_get('islandora_solr_simple_search_label_visibility', 'TRUE') == FALSE) {
     $title_visible = 'invisible';
   }
   else {
     $title_visible = 'before';
   }
 
-  $title_label = variable_get('islandora_solr_simple_search_label_title');
+  $title_label = variable_get('islandora_solr_simple_search_label_title', 'Search Term');
 
   $form['simple']["islandora_simple_search_query"] = array(
     '#size' => '15',
