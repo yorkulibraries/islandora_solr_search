@@ -1718,6 +1718,8 @@ function _islandora_solr_handle_solr_field_settings($solr_field_settings = NULL,
           'date_filter_datepicker_enabled',
           'date_filter_datepicker_range',
           'pid_object_label',
+          'boolean_facet_true_replacement',
+          'boolean_facet_false_replacement',
         ));
         $relevant_values = array_intersect_key($solr_field_settings, $fields);
         $relevant_values['label'] = isset($relevant_values['label']) ?
@@ -2181,6 +2183,31 @@ function islandora_solr_admin_settings_facet_fields($form, &$form_state, $variab
         'visible' => array(
           ':input[name="date_filter_datepicker_enabled"]' => array('checked' => TRUE),
         ),
+      ),
+    );
+  }
+  elseif (islandora_solr_is_boolean_field($solr_field)) {
+    // Defaults.
+    $values += array(
+      'boolean_facet_true_replacement' => '',
+      'boolean_facet_false_replacement' => '',
+    );
+    $form['options']['boolean_facet'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Boolean Facet Options'),
+      '#collapsible' => FALSE,
+      'blurb' => array(
+        '#markup' => t('Enter replacement values for the labels of TRUE and FALSE results for boolean facets. Leaving a field empty will cause that result to show up as "true" or "false", respectively, which may be less than clear to the end user.'),
+      ),
+      'boolean_facet_true_replacement' => array(
+        '#type' => 'textfield',
+        '#title' => t('Replacement for TRUE values'),
+        '#default_value' => $values['boolean_facet_true_replacement'],
+      ),
+      'boolean_facet_false_replacement' => array(
+        '#type' => 'textfield',
+        '#title' => t('Replacement for FALSE values'),
+        '#default_value' => $values['boolean_facet_false_replacement'],
       ),
     );
   }
