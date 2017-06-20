@@ -1344,11 +1344,18 @@ function _islandora_solr_admin_settings_submit($form, &$form_state) {
               }
             }
             if (module_exists('i18n_string')) {
-              if (isset($solr_field_settings['label'])) {
-                i18n_string_update("islandora_solr:field_settings:$field_type:label:$solr_field", $solr_field_settings['label']);
-              }
-              else {
-                i18n_string_remove("islandora_solr:field_settings:$field_type:label:$solr_field");
+              $to_i18nize = array(
+                'label',
+                'boolean_facet_true_replacement',
+                'boolean_facet_false_replacement',
+              );
+              foreach ($to_i18nize as $string_type) {
+                if (isset($solr_field_settings[$string_type])) {
+                  i18n_string_update("islandora_solr:field_settings:$field_type:$string_type:$solr_field", $solr_field_settings[$string_type]);
+                }
+                else {
+                  i18n_string_remove("islandora_solr:field_settings:$field_type:$string_type:$solr_field");
+                }
               }
             }
             $insert_values[] = array(
