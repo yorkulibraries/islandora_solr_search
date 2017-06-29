@@ -558,6 +558,10 @@ function islandora_solr_truncate_field_display($display_values, $max_length, $ad
     $updated_display_values .= '</span>';
 
   }
+  else {
+    $updated_display_values = '';
+  }
+
   return $updated_display_values;
 };
 
