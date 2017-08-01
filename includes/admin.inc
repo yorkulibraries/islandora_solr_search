@@ -489,32 +489,6 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('islandora_solr_facet_max_limit', '20'),
   );
 
-  // Simple search block.
-  $form['islandora_solr_tabs']['simple_search_block'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Simple search block'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  // Simple search block -- Specify label.
-  $form['islandora_solr_tabs']['simple_search_block']['islandora_solr_simple_search_label_title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Simple Search Label'),
-    '#size' => 30,
-    '#default_value' => variable_get('islandora_solr_simple_search_label_title', 'Search Term'),
-    '#description' => t('Customize label text associated with search input form. Accessibility guidelines recommend whenever possible to explicitly associate label text with form inputs.'),
-    '#required' => TRUE,
-  );
-
-  // Simple search block -- hide label.
-  $form['islandora_solr_tabs']['simple_search_block']['islandora_solr_simple_search_label_visibility'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Simple Search Label Visibility'),
-    '#default_value' => variable_get('islandora_solr_simple_search_label_visibility', TRUE),
-    '#description' => t('Display the label alongside the simple search input. If unchecked, label will be visibly hidden but will be kept available for screen-readers.'),
-  );
-
   // Advanced search block.
   $form['islandora_solr_tabs']['advanced_search_block'] = array(
     '#type' => 'fieldset',
