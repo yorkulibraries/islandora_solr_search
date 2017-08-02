@@ -119,7 +119,7 @@ function islandora_solr_block_configure($delta = '') {
       '#description' => t('Customize label text associated with search input form. Accessibility guidelines recommend whenever possible to explicitly associate label text with form inputs.'),
       '#required' => TRUE,
     );
-    $form['islandora_solr_simple_search_label_visibility'] = array (
+    $form['islandora_solr_simple_search_label_visibility'] = array(
       '#type' => 'checkbox',
       '#title' => t('Simple Search Label Visibility'),
       '#default_value' => variable_get('islandora_solr_simple_search_label_visibility', TRUE),
@@ -130,7 +130,7 @@ function islandora_solr_block_configure($delta = '') {
 }
 
 /**
- * Implements hook_block_save()
+ * Implements hook_block_save().
  */
 function islandora_solr_block_save($delta = '', $edit = array()) {
   if ($delta == 'simple') {
