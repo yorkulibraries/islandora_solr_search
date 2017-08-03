@@ -886,7 +886,8 @@ function islandora_solr_sort() {
     }
     else {
       // If no parameters are given, internally solr defaults to 'score desc'
-      // https://lucene.apache.org/solr/guide/6_6/common-query-parameters.html#CommonQueryParameters-ThesortParameter
+      // https://lucene.apache.org/solr/guide/6_6/common-query-parameters.html
+      // #CommonQueryParameters-ThesortParameter
       $current_sort_term = 'score';
       $current_sort_order = 'desc';
     }
