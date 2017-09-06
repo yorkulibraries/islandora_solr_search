@@ -885,9 +885,9 @@ function islandora_solr_sort() {
       $current_sort_order = isset($sort_explode[1]) ? $sort_explode[1] : NULL;
     }
     else {
-      // If no parameters are given, internally solr defaults to 'score desc'
-      // https://lucene.apache.org/solr/guide/6_6/common-query-parameters.html
-      // #CommonQueryParameters-ThesortParameter
+      // If no parameters are given, internally solr defaults to 'score desc'. 
+      // See Common Query Paremeters section:
+      // http://archive.apache.org/dist/lucene/solr/ref-guide/
       $current_sort_term = 'score';
       $current_sort_order = 'desc';
     }

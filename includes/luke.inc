@@ -131,9 +131,8 @@ function islandora_solr_get_luke($solr_url = NULL, $field = NULL, $num_terms = 0
  * Returns an array containing all fields in Luke that are sortable.
  *
  * Must be indexed and can't be multivalued.
- * @link https://lucene.apache.org/solr/guide/6_6/common-query-parameters.html
- * #CommonQueryParameters-ThesortParameter 
- * More info on constraints. @endlink
+ * @link http://archive.apache.org/dist/lucene/solr/ref-guide/ 
+ * Common Query Parameters: Sort section for more info on constraints. @endlink
  *
  * @param string $solr_url
  *   URL which points to Solr.
