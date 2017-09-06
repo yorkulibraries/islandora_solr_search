@@ -44,8 +44,8 @@ function islandora_solr_admin_index_settings($form, &$form_state) {
       $solr_avail = FALSE;
     }
     elseif (preg_match('/^([^\/]+):/', $solr_url) === 0) {
-        form_set_error('islandora_solr_url', t('Port number required in Solr URL.'));
-        $solr_avail = FALSE;
+      form_set_error('islandora_solr_url', t('Port number required in Solr URL.'));
+      $solr_avail = FALSE;
     }
     else {
       // Check if Solr is available.
