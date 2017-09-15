@@ -43,6 +43,10 @@ function islandora_solr_admin_index_settings($form, &$form_state) {
       ));
       $solr_avail = FALSE;
     }
+    elseif (preg_match('/^([^\/]+):/', $solr_url) === 0) {
+      form_set_error('islandora_solr_url', t('Port number required in Solr URL.'));
+      $solr_avail = FALSE;
+    }
     else {
       // Check if Solr is available.
       $solr_avail = islandora_solr_ping($solr_url);
@@ -93,7 +97,7 @@ function islandora_solr_admin_index_settings($form, &$form_state) {
     '#title' => t('Solr URL'),
     '#size' => 80,
     '#weight' => -1,
-    '#description' => t('The URL of the Solr installation. Defaults to localhost:8080/solr.'),
+    '#description' => t('The URL of the Solr installation. Defaults to localhost:8080/solr.  Port number (e.g. ":8080") is required.'),
     '#default_value' => $solr_url,
     '#required' => TRUE,
     '#ajax' => array(
