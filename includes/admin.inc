@@ -606,8 +606,8 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#size' => 30,
     '#description' => t('Indicates which field should define the sort order for the default query.<br />
     For example: <strong>fgs_createdDate_dt desc</strong>.<br /><strong>Note:</strong> only single-valued fields are sortable.
-    For more information, check the <a href="!url">Solr documentation</a>.',
-      array('!url' => 'http://wiki.apache.org/solr/CommonQueryParameters#sort')),
+    For more information, see "sort" as discussed in the "Common query parameters" section of the 
+    <a href="!url">Solr documentation</a>.', array('!url' => 'http://archive.apache.org/dist/lucene/solr/ref-guide/')),
     '#default_value' => variable_get('islandora_solr_base_sort', ''),
   );
   $form['islandora_solr_tabs']['query_defaults']['islandora_solr_base_filter'] = array(
@@ -622,8 +622,8 @@ function islandora_solr_admin_settings($form, &$form_state) {
     '#type' => 'textarea',
     '#title' => t('Query fields'),
     '#default_value' => variable_get('islandora_solr_query_fields', 'dc.title^5 dc.subject^2 dc.description^2 dc.creator^2 dc.contributor^1 dc.type'),
-    '#description' => t('<a href="@url" target="_blank" title="Solr query fields documentation">Query fields</a> to use for DisMax (simple) searches.', array(
-      '@url' => 'http://wiki.apache.org/solr/DisMaxQParserPlugin#qf_.28Query_Fields.29',
+    '#description' => t('Query fields to use for DisMax (simple) searches. See the QueryFields section in the <a href="@url" target="_blank" title="Solr documentation">Solr documentation</a> for examples.', array(
+      '@url' => 'http://archive.apache.org/dist/lucene/solr/ref-guide/',
     )),
   );
   $form['islandora_solr_tabs']['query_defaults']['islandora_solr_use_ui_qf'] = array(

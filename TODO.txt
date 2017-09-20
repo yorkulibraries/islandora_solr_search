@@ -66,7 +66,7 @@ check if IslandoraSolrQueryProcessor::display is set, which is not ideal.
 - update hook_help functions
 - add a parameter to the luke function to return a single document.
 - check if spaces could be replaced by + or %20 , which would simplify some functions (splitting strings)
-http://wiki.apache.org/solr/CommonQueryParameters#sort
+http://archive.apache.org/dist/lucene/solr/ref-guide/
 - don't hardcode php solr library, instead override it.
 - add ajax_command_changed() to the vertical tabs to show something has changed.
 - add watchdog messages on error.
