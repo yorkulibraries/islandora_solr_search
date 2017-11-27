@@ -401,7 +401,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $map_to_link = function ($original_value, $formatted_value) use ($field) {
             $solr_query = format_string('!field:"!value"', array(
               '!field' => $field,
-              '!value' => islandora_solr_lesser_escape($original_value),
+              '!value' => islandora_solr_replace_slashes(islandora_solr_lesser_escape($original_value)),
             ));
             return l($formatted_value, "islandora/search/$solr_query", array(
               'html' => TRUE,
