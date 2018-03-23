@@ -473,7 +473,7 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
       '!member_of' => $member_of,
     )),
   );
-  $qp->solrParams['fq'] = $filters;
+  $qp->solrParams['fq'][] = $filters;
 
   if (variable_get('islandora_solr_collection_result_limit_block_override', FALSE)) {
     if (isset($qp->internalSolrParams['limit'])) {
