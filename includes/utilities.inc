@@ -463,11 +463,16 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
   $_islandora_solr_queryclass = $qp;
 
   $qp->buildQuery("*:*", drupal_get_query_parameters());
-  $qp->solrParams['fq'][] = format_string('!member_field:("info:fedora/!pid" OR "!pid") OR !collection_member_field:("info:fedora/!pid" OR "!pid")', array(
-    '!member_field' => variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms'),
-    '!pid' => $collection_object->id,
-    '!collection_member_field' => variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms'),
-  ));
+  $member_of = variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms');
+  $member_of_collection = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
+  $filters = array(
+    format_string('!member_of_collection:"!pid" OR !member_of:"!pid"', array(
+      '!member_of_collection' => $member_of_collection,
+      '!pid' => "info:fedora/$pid",
+      '!member_of' => $member_of,
+    )),
+  );
+  $qp->solrParams['fq'] = $filters;
 
   if (variable_get('islandora_solr_collection_result_limit_block_override', FALSE)) {
     if (isset($qp->internalSolrParams['limit'])) {
