@@ -461,7 +461,7 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
   global $_islandora_solr_queryclass;
   $qp = new IslandoraSolrQueryProcessor();
   $_islandora_solr_queryclass = $qp;
-  dpm(drupal_get_query_parameters());
+
   $qp->buildQuery("*:*", drupal_get_query_parameters());
   $qp->solrParams['fq'][] = format_string('!member_field:("info:fedora/!pid" OR "!pid") OR !collection_member_field:("info:fedora/!pid" OR "!pid")', array(
     '!member_field' => variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms'),
