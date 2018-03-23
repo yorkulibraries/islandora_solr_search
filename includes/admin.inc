@@ -1711,6 +1711,7 @@ function _islandora_solr_handle_solr_field_settings($solr_field_settings = NULL,
           'wordsafe' => isset($solr_field_settings['wordsafe']) ? $solr_field_settings['wordsafe'] : FALSE,
           'wordsafe_length' => isset($solr_field_settings['wordsafe_length']) ? $solr_field_settings['wordsafe_length'] : 1,
           'permissions' => empty($solr_field_settings['enable_permissions']) ? FALSE : $solr_field_settings['permissions'],
+          'replace_pid_with_label' => empty($solr_field_settings['replace_pid_with_label']) ? FALSE : $solr_field_settings['replace_pid_with_label'],
         );
         break;
 
@@ -1918,6 +1919,12 @@ function islandora_solr_admin_settings_result_fields($form, &$form_state, $varia
     $form['options']['snippet']['#default_value'] = 0;
     $form['options']['snippet']['#disabled'] = TRUE;
   }
+  $form['options']['replace_pid_with_label'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Replace PID with Object Label'),
+    '#default_value' => isset($values['replace_pid_with_label']) ? $values['replace_pid_with_label'] : FALSE,
+    '#description' => t("Replace a PID (islandora:foo) or a URI (info:fedora/islandora:foo) with that object's label. Will only work with non-tokenized Solr fields (full literal strings)."),
+  );
 
   if (islandora_solr_is_date_field($solr_field)) {
     $form['options']['date_format'] = array(
