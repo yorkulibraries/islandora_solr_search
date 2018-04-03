@@ -466,7 +466,7 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
   $pid = $collection_object->id;
   $member_of = variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms');
   $member_of_collection = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
-  $filters = format_string('!member_of_collection:("!iripid" OR "!pid") OR (!member_of:"!iripid" OR "!pid")',
+  $filters = format_string('!member_of_collection:("!iripid" OR "!pid") OR !member_of:("!iripid" OR "!pid")',
     array(
       '!member_of_collection' => $member_of_collection,
       '!iripid' => "info:fedora/$pid",
