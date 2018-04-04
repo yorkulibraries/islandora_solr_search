@@ -36,7 +36,7 @@ Further documentation for this module is available at [our wiki](https://wiki.du
 
 Current maintainers:
 
-* [Nelson Hart](https://github.com/nhart)
+* [Jared Whiklo](https://github.com/whikloj)
 
 ## Development
 
