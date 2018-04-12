@@ -634,6 +634,7 @@ function islandora_solr_is_date_field($solr_field) {
   $date_types = array(
     'org.apache.solr.schema.DateField',
     'org.apache.solr.schema.TrieDateField',
+    'org.apache.solr.schema.DatePointField',
   );
   return islandora_solr_is_typed_field($solr_field, $date_types);
 }

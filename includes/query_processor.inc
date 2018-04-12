@@ -209,15 +209,19 @@ class IslandoraSolrQueryProcessor {
         $gap = $value['solr_field_settings']['range_facet_gap'];
         // Add date facet.
         $params_date_facets["facet.date"][] = $field;
+        $params_date_facets["facet.range"][] = $field;
         // Custom field settings.
         if ($start) {
           $params_date_facets["f.{$field}.facet.date.start"] = $start;
+          $params_date_facets["f.{$field}.facet.range.start"] = $start;
         }
         if ($end) {
           $params_date_facets["f.{$field}.facet.date.end"] = $end;
+          $params_date_facets["f.{$field}.facet.range.end"] = $end;
         }
         if ($gap) {
           $params_date_facets["f.{$field}.facet.date.gap"] = $gap;
+          $params_date_facets["f.{$field}.facet.range.gap"] = $gap;
         }
         // When the range slider is enabled we always want to return empty
         // values.
@@ -232,6 +236,9 @@ class IslandoraSolrQueryProcessor {
       $params_date_facets["facet.date.start"] = 'NOW/YEAR-20YEARS';
       $params_date_facets["facet.date.end"] = 'NOW';
       $params_date_facets["facet.date.gap"] = '+1YEAR';
+      $params_date_facets["facet.range.start"] = 'NOW/YEAR-20YEARS';
+      $params_date_facets["facet.range.end"] = 'NOW';
+      $params_date_facets["facet.range.gap"] = '+1YEAR';
 
       $params_array = array_merge($params_array, $params_date_facets);
     }
@@ -240,7 +247,7 @@ class IslandoraSolrQueryProcessor {
     $default_sort = (variable_get('islandora_solr_facet_max_limit', '20') <= 0 ? 'index' : 'count');
 
     $facet_sort_array = array();
-    foreach (array_merge($facet_array, $facet_dates) as $key => $value) {
+    foreach ($facet_array as $key => $value) {
       if (isset($value['solr_field_settings']['sort_by']) && $value['solr_field_settings']['sort_by'] != $default_sort) {
         // If the sort doesn't match default then specify it in the parameters.
         $facet_sort_array["f.{$key}.facet.sort"] = check_plain($value['solr_field_settings']['sort_by']);
