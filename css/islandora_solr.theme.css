@@ -55,6 +55,7 @@ dl.solr-fields
 .solr-fields dd
 {
   border-top: 1px solid #ddd;
+  word-wrap: break-word;
 }
 
 .solr-fields dt.first,

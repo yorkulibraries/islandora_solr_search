@@ -311,6 +311,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
   $truncate_length = islandora_solr_get_truncate_length_fields();
   $link_to_search = islandora_solr_get_link_to_search_fields();
   $date_format = islandora_solr_get_date_format_fields();
+  $replace_pid_with_label = islandora_solr_get_pid_to_label_replacement_fields();
 
   // Loop over object results.
   foreach ($object_results as $object_index => $object_result) {
@@ -358,7 +359,34 @@ function islandora_solr_prepare_solr_results($solr_results) {
       elseif (isset($highlighting[$pid][$field])) {
         $value = $highlighting[$pid][$field];
       }
-
+      // Replace PID with Object Label.
+      if (in_array($field, $replace_pid_with_label)) {
+        $query_processor = new IslandoraSolrQueryProcessor();
+        $label = NULL;
+        $pid_to_label_mapper = function ($uri) use ($query_processor) {
+          $pid = str_replace('info:fedora/', '', $uri);
+          if (islandora_is_valid_pid($pid)) {
+            $query_processor->buildQuery("PID:\"$pid\"");
+            $query_processor->solrParams['fl'] = 'PID, ' . variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+            $query_processor->executeQuery(FALSE);
+            if (!empty($query_processor->islandoraSolrResult) && !empty($query_processor->islandoraSolrResult['response']['objects'])) {
+              $label = (!empty($query_processor->islandoraSolrResult['response']['objects'][0]['object_label']) ?
+                $query_processor->islandoraSolrResult['response']['objects'][0]['object_label'] : NULL);
+            }
+            // Fall back to islandora object if PID is not in solr.
+            // eg: content models.
+            else {
+              if ($object = islandora_object_load($pid)) {
+                if (islandora_object_access(ISLANDORA_VIEW_OBJECTS, $object)) {
+                  $label = $object->label;
+                }
+              }
+            }
+          }
+          return (!empty($label) ? $label : $uri);
+        };
+        $value = array_map($pid_to_label_mapper, (array) $value);
+      }
       // Truncate value lengths before linking, avoids destroying link tags.
       if (array_key_exists($field, $truncate_length) && $truncate_length[$field]['maximum_length'] > 0 && (!isset($truncate_length[$field]['truncation_type']) || $truncate_length[$field]['truncation_type'] == 'separate_value_option')) {
         // Coder tends to not like inline anonymous functions.
@@ -434,11 +462,19 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
   $qp = new IslandoraSolrQueryProcessor();
   $_islandora_solr_queryclass = $qp;
 
-  $qp->buildQuery(format_string('!member_field:("info:fedora/!pid" OR "!pid") OR !collection_member_field:("info:fedora/!pid" OR "!pid")', array(
-    '!member_field' => variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms'),
-    '!pid' => $collection_object->id,
-    '!collection_member_field' => variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms'),
-  )), drupal_get_query_parameters());
+  $qp->buildQuery("*:*", drupal_get_query_parameters());
+  $pid = $collection_object->id;
+  $member_of = variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms');
+  $member_of_collection = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
+  $filters = format_string('!member_of_collection:("!iripid" OR "!pid") OR !member_of:("!iripid" OR "!pid")',
+    array(
+      '!member_of_collection' => $member_of_collection,
+      '!iripid' => "info:fedora/$pid",
+      '!pid' => $pid,
+      '!member_of' => $member_of,
+    )
+  );
+  $qp->solrParams['fq'][] = $filters;
 
   if (variable_get('islandora_solr_collection_result_limit_block_override', FALSE)) {
     if (isset($qp->internalSolrParams['limit'])) {

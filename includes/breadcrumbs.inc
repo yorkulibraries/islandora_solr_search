@@ -107,7 +107,7 @@ function islandora_solr_get_breadcrumb_parent($pid) {
   $solr_query = format_string('PID:"!pid"', array(
     '!pid' => $pid,
   ));
-  $parent_fields = preg_split("/\\r\\n|\\n|\\r/", variable_get('islandora_solr_breadcrumbs_parents', "RELS_EXT_isMemberOfCollection_uri_ms\r\nRELS_EXT_isMemberOf_uri_ms"), -1, PREG_SPLIT_NO_EMPTY);
+  $parent_fields = preg_split("/\\r\\n|\\n|\\r/", variable_get('islandora_solr_breadcrumbs_parent_fields', "RELS_EXT_isMemberOfCollection_uri_ms\r\nRELS_EXT_isMemberOf_uri_ms"), -1, PREG_SPLIT_NO_EMPTY);
   $solr_params = array(
     'fl' => implode(",", $parent_fields) . ',fgs_label_s,PID',
     'hl' => 'false',
