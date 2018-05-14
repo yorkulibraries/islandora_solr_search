@@ -623,7 +623,6 @@ function islandora_solr_advanced_search_form($form, &$form_state) {
     $term['field'] = array(
       '#title' => t('Field'),
       '#type' => 'select',
-      '#title' => t('Field'),
       '#title_display' => 'invisible',
       '#default_value' => isset($value['field']) ? $value['field'] : NULL,
       '#options' => islandora_solr_get_fields('search_fields'),
