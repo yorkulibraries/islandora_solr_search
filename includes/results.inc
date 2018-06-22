@@ -550,7 +550,28 @@ class IslandoraSolrResults {
         $format = $this->dateFormatFacets[$solr_field]['solr_field_settings']['date_facet_format'];
         $filter_split[1] = format_date(strtotime(stripslashes($filter_split[1])), 'custom', $format);
       }
-      $filter_string = $filter_split[1];
+      $facet_fields_settings = islandora_solr_get_fields('facet_fields', TRUE, FALSE, TRUE);
+      $filter_string = str_replace('info:fedora/', '', stripslashes($filter_split[1]));
+      if (isset($facet_fields_settings[$solr_field]['solr_field_settings']['pid_object_label']) && $facet_fields_settings[$solr_field]['solr_field_settings']['pid_object_label'] == 1) {
+        $qp = new IslandoraSolrQueryProcessor();
+        $qp->buildQuery(format_string('PID:(!pids)', array(
+          '!pids' => $filter_string,
+        )));
+        $label_field = variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+        $qp->solrParams['facet'] = 'false';
+        $qp->solrParams['fl'] = "PID, $label_field";
+        $qp->solrLimit = 1;
+        $qp->executeQuery(FALSE, TRUE);
+        if ($qp->islandoraSolrResult['response']['numFound'] > 0) {
+          foreach ($qp->islandoraSolrResult['response']['objects'] as $doc) {
+            $filter_string = $doc['object_label'];
+          }
+        }
+        else if ($object = islandora_object_load($filter_string)) {
+          $filter_string = $object->label;
+        }
+      }
+
     }
     return stripslashes($filter_string);
   }
