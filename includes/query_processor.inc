@@ -207,7 +207,7 @@ class IslandoraSolrQueryProcessor {
         $start = $value['solr_field_settings']['range_facet_start'];
         $end = $value['solr_field_settings']['range_facet_end'];
         $gap = $value['solr_field_settings']['range_facet_gap'];
-        // Add date facet and range facet to support old date facets and new range facets.
+        // Add date and range facet to support both old and new facets.
         $params_date_facets["facet.date"][] = $field;
         $params_date_facets["facet.range"][] = $field;
         // Custom field settings.
