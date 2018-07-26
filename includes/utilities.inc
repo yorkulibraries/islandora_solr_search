@@ -118,6 +118,30 @@ function islandora_solr_csv_explode($delim = ',', $str = '', $enclose = '"', $pr
 }
 
 /**
+ * Escape a string for inclusion in a facet query term.
+ *
+ * Copied from Apache_Solr_Service.
+ *
+ * The default charset diverges from Apache_Solr_Service::escape():
+ *
+ * @param string $value
+ *   A string to escape.
+ *
+ * @param array $pattern
+ *   An regular expression pattern
+ *
+ * @return string
+ *   The escaped string.
+ */
+function islandora_solr_facet_query_escape($value, $pattern = NULL) {
+  if (!$pattern) {
+    $pattern = ISLANDORA_SOLR_QUERY_FACET_LUCENE_ESCAPE_REGEX_DEFAULT;
+  }
+  $replace = '\\\$1';
+  return preg_replace($pattern, $replace, $value);
+}
+
+/**
  * Escape a string for inclusion in a query field or value.
  *
  * Copied from Apache_Solr_Service.
@@ -278,6 +302,8 @@ function islandora_solr_prepare_solr_doc($object_results) {
  *   Returns the same array but with prepared Solr field values.
  */
 function islandora_solr_prepare_solr_results($solr_results) {
+  module_load_include('inc', 'islandora_solr', 'includes/field_truncation');
+
   $object_results = $solr_results['response']['objects'];
   $highlighting = isset($solr_results['highlighting']) ? $solr_results['highlighting'] : array();
   $fields_all = islandora_solr_get_fields('result_fields', FALSE);
@@ -285,6 +311,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
   $truncate_length = islandora_solr_get_truncate_length_fields();
   $link_to_search = islandora_solr_get_link_to_search_fields();
   $date_format = islandora_solr_get_date_format_fields();
+  $replace_pid_with_label = islandora_solr_get_pid_to_label_replacement_fields();
 
   // Loop over object results.
   foreach ($object_results as $object_index => $object_result) {
@@ -332,7 +359,34 @@ function islandora_solr_prepare_solr_results($solr_results) {
       elseif (isset($highlighting[$pid][$field])) {
         $value = $highlighting[$pid][$field];
       }
-
+      // Replace PID with Object Label.
+      if (in_array($field, $replace_pid_with_label)) {
+        $query_processor = new IslandoraSolrQueryProcessor();
+        $label = NULL;
+        $pid_to_label_mapper = function ($uri) use ($query_processor) {
+          $pid = str_replace('info:fedora/', '', $uri);
+          if (islandora_is_valid_pid($pid)) {
+            $query_processor->buildQuery("PID:\"$pid\"");
+            $query_processor->solrParams['fl'] = 'PID, ' . variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+            $query_processor->executeQuery(FALSE);
+            if (!empty($query_processor->islandoraSolrResult) && !empty($query_processor->islandoraSolrResult['response']['objects'])) {
+              $label = (!empty($query_processor->islandoraSolrResult['response']['objects'][0]['object_label']) ?
+                $query_processor->islandoraSolrResult['response']['objects'][0]['object_label'] : NULL);
+            }
+            // Fall back to islandora object if PID is not in solr.
+            // eg: content models.
+            else {
+              if ($object = islandora_object_load($pid)) {
+                if (islandora_object_access(ISLANDORA_VIEW_OBJECTS, $object)) {
+                  $label = $object->label;
+                }
+              }
+            }
+          }
+          return (!empty($label) ? $label : $uri);
+        };
+        $value = array_map($pid_to_label_mapper, (array) $value);
+      }
       // Truncate value lengths before linking, avoids destroying link tags.
       if (array_key_exists($field, $truncate_length) && $truncate_length[$field]['maximum_length'] > 0 && (!isset($truncate_length[$field]['truncation_type']) || $truncate_length[$field]['truncation_type'] == 'separate_value_option')) {
         // Coder tends to not like inline anonymous functions.
@@ -340,11 +394,20 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $tf =& $truncate_length[$field];
           $wordsafe = FALSE;
           $min_wordsafe_length = 1;
+
           if (isset($tf['wordsafe'])) {
             $wordsafe = $tf['wordsafe'];
             $min_wordsafe_length = $tf['wordsafe_length'];
           }
-          $val_val = truncate_utf8($val_val, $tf['maximum_length'], $wordsafe, $tf['add_ellipsis'], $min_wordsafe_length);
+
+          $val_val = (string) new IslandoraSolrFieldTruncation(
+            $val_val,
+            $tf['maximum_length'],
+            $wordsafe,
+            $tf['add_ellipsis'],
+            $min_wordsafe_length
+          );
+
         };
         array_walk($value, $truncate_func);
       }
@@ -366,7 +429,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $map_to_link = function ($original_value, $formatted_value) use ($field) {
             $solr_query = format_string('!field:"!value"', array(
               '!field' => $field,
-              '!value' => islandora_solr_lesser_escape($original_value),
+              '!value' => islandora_solr_replace_slashes(islandora_solr_lesser_escape($original_value)),
             ));
             return l($formatted_value, "islandora/search/$solr_query", array(
               'html' => TRUE,
@@ -375,7 +438,7 @@ function islandora_solr_prepare_solr_results($solr_results) {
           $value = array_map($map_to_link, (array) $original_value, (array) $value);
         }
         elseif (in_array($field, $link_to_object)) {
-          $value = l(implode($value), $object_result['object_url'], $options);
+          $value = l(implode($separator, $value), $object_result['object_url'], $options);
         }
       }
       // Implode.
@@ -399,11 +462,19 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
   $qp = new IslandoraSolrQueryProcessor();
   $_islandora_solr_queryclass = $qp;
 
-  $qp->buildQuery(format_string('!member_field:("info:fedora/!pid" OR "!pid") OR !collection_member_field:("info:fedora/!pid" OR "!pid")', array(
-    '!member_field' => variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms'),
-    '!pid' => $collection_object->id,
-    '!collection_member_field' => variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms'),
-  )), drupal_get_query_parameters());
+  $qp->buildQuery("*:*", drupal_get_query_parameters());
+  $pid = $collection_object->id;
+  $member_of = variable_get('islandora_solr_member_of_field', 'RELS_EXT_isMemberOf_uri_ms');
+  $member_of_collection = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
+  $filters = format_string('!member_of_collection:("!iripid" OR "!pid") OR !member_of:("!iripid" OR "!pid")',
+    array(
+      '!member_of_collection' => $member_of_collection,
+      '!iripid' => "info:fedora/$pid",
+      '!pid' => $pid,
+      '!member_of' => $member_of,
+    )
+  );
+  $qp->solrParams['fq'][] = $filters;
 
   if (variable_get('islandora_solr_collection_result_limit_block_override', FALSE)) {
     if (isset($qp->internalSolrParams['limit'])) {
@@ -462,6 +533,8 @@ function islandora_solr_islandora_basic_collection_backend_callable($collection_
  *   The updated display values.
  */
 function islandora_solr_truncate_field_display($display_values, $max_length, $add_ellipsis, $word_safe, $wordsafe_length, $separator, $link_options = NULL) {
+  module_load_include('inc', 'islandora_solr', 'includes/field_truncation');
+
   $updated_display_values = $display_values;
   $separator = filter_xss($separator, islandora_solr_get_filter_tags());
 
@@ -485,8 +558,15 @@ function islandora_solr_truncate_field_display($display_values, $max_length, $ad
         if ($add_ellipsis) {
           $truncation_length = max($truncation_length, drupal_strlen(t('...')));
         }
-        $current_value = truncate_utf8($current_value, $truncation_length, $word_safe, $add_ellipsis, $wordsafe_length);
-        $truncated_list[] = $current_value;
+
+        $truncated_list[] = (string) new IslandoraSolrFieldTruncation(
+          $current_value,
+          $truncation_length,
+          $word_safe,
+          $add_ellipsis,
+          $wordsafe_length
+        );
+
         break;
       }
     }
@@ -534,6 +614,10 @@ function islandora_solr_truncate_field_display($display_values, $max_length, $ad
     $updated_display_values .= '</span>';
 
   }
+  else {
+    $updated_display_values = '';
+  }
+
   return $updated_display_values;
 };
 
@@ -551,11 +635,42 @@ function islandora_solr_is_date_field($solr_field) {
     'org.apache.solr.schema.DateField',
     'org.apache.solr.schema.TrieDateField',
   );
+  return islandora_solr_is_typed_field($solr_field, $date_types);
+}
+
+/**
+ * Check the field type against boolean-type fields.
+ *
+ * @param string $solr_field
+ *   The Solr field name.
+ *
+ * @return bool
+ *   Whether the field is a boolean type.
+ */
+function islandora_solr_is_boolean_field($solr_field) {
+  $bool_types = array(
+    'org.apache.solr.schema.BoolField',
+  );
+  return islandora_solr_is_typed_field($solr_field, $bool_types);
+}
+
+/**
+ * Check the field type against an array of types.
+ *
+ * @param string $solr_field
+ *   The Solr field name.
+ * @param array $types
+ *   A list of Solr field type classes to check against.
+ *
+ * @return bool
+ *   Whether the field type is in the provided list.
+ */
+function islandora_solr_is_typed_field($solr_field, $types) {
   $luke_result = islandora_solr_get_luke(NULL, $solr_field);
   $type = (isset($luke_result['fields'][$solr_field]['type']) ? $luke_result['fields'][$solr_field]['type'] : FALSE);
   if ($type) {
     $class = islandora_solr_get_type_class($type);
-    return in_array($class, $date_types);
+    return in_array($class, $types);
   }
   return FALSE;
 }

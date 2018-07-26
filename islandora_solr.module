@@ -9,7 +9,11 @@ define('ISLANDORA_SOLR_SEARCH_PATH', 'islandora/search');
 define('ISLANDORA_SOLR_QUERY_SPLIT_REGEX', '/(?<!\\\\) /');
 define('ISLANDORA_SOLR_QUERY_FIELD_VALUE_SPLIT_REGEX', '/(?<!\\\\):/');
 
+const ISLANDORA_SOLR_QUERY_FACET_LUCENE_ESCAPE_REGEX_DEFAULT = '/(\+|-|&&|\|\||!|\(|\)|\{|\}|\[|\]|\^| |~|\*|\?|\:|"|\\\\|\\/)/';
+
 const ISLANDORA_SOLR_FACET_BUCKET_CLASSES_HOOK_BASE = 'islandora_solr_facet_bucket_classes';
+
+const ISLANDORA_SOLR_BREADCRUMB_BACKEND = 'islandora_solr_breadcrumb_backend';
 
 // Includes functions for common db queries.
 require_once dirname(__FILE__) . '/includes/db.inc';
@@ -29,6 +33,7 @@ function islandora_solr_menu() {
   $items['islandora/search'] = array(
     'title' => 'Search results',
     'page callback' => 'islandora_solr',
+    'page arguments' => array(2, NULL),
     'access arguments' => array('search islandora solr'),
     'type' => MENU_CALLBACK,
   );
@@ -59,7 +64,15 @@ function islandora_solr_menu() {
     'file' => 'includes/admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
-
+  $items['admin/islandora/search/islandora_solr/breadcrumbs'] = array(
+    'title' => 'Solr breadcrumbs',
+    'description' => 'Configure Solr breadcrumb generation',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_solr_admin_breadcrumbs_settings'),
+    'access arguments' => array('administer islandora solr'),
+    'file' => 'includes/admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
   $items['islandora_solr/field'] = array(
     'title' => 'Result field',
     'description' => 'Configuration for Solr result field',
@@ -271,14 +284,20 @@ function islandora_solr($query = NULL, $params = NULL) {
   // Set primary display.
   // Check if display param is an valid, enabled profile; otherwise, show
   // default.
-  if (isset($params['display']) && in_array($params['display'], $enabled_profiles)) {
-    $islandora_solr_primary_display = $params['display'];
+  if (isset($params['display'])) {
+    if (in_array($params['display'], $enabled_profiles)) {
+      $islandora_solr_primary_display = $params['display'];
+    }
+    else {
+      // Unset invalid parameter.
+      unset($params['display']);
+    }
   }
-  else {
+
+  if (empty($islandora_solr_primary_display)) {
     $islandora_solr_primary_display = variable_get('islandora_solr_primary_display', 'default');
-    // Unset invalid parameter.
-    unset($params['display']);
   }
+
   $params['islandora_solr_search_navigation'] = variable_get('islandora_solr_search_navigation', FALSE);
 
   // !!! Set the global variable. !!!
@@ -530,7 +549,7 @@ function islandora_solr_form_islandora_basic_collection_admin_alter(&$form, &$fo
     '#type' => 'textfield',
     '#title' => t('Sort field for collection query'),
     '#size' => 100,
-    '#description' => t('Indicates an alternate default method for sorting collection members when using the Solr query backend. If unset, the Solr default query sort will be used.'),
+    '#description' => t('One or more non-multivalued Solr fields to sort by when using the Solr collection query backend (by convention, multivalued fields have names that contain "_m" plus another letter at the end of their Solr names). Add " asc" or " desc" after each fieldname. If this setting is empty, the Solr default query sort will be used.'),
     '#default_value' => variable_get('islandora_solr_collection_sort', ''),
     '#states' => $states,
   );
@@ -554,5 +573,19 @@ function islandora_solr_form_islandora_basic_collection_admin_alter(&$form, &$fo
     '#description' => t('Allows Solr result limit block to override the default collection limit.'),
     '#default_value' => variable_get('islandora_solr_collection_result_limit_block_override', FALSE),
     '#states' => $states,
+  );
+}
+
+/**
+ * Implements hook_islandora_breadcrumbs_backends().
+ */
+function islandora_solr_islandora_breadcrumbs_backends() {
+  $module_path = drupal_get_path('module', 'islandora_solr');
+  return array(
+    ISLANDORA_SOLR_BREADCRUMB_BACKEND => array(
+      'title' => t('Islandora Solr'),
+      'callable' => 'islandora_solr_islandora_breadcrumbs_backends_callable',
+      'file' => "$module_path/includes/breadcrumbs.inc",
+    ),
   );
 }

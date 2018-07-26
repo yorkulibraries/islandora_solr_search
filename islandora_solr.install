@@ -49,7 +49,6 @@ function islandora_solr_install() {
  * variables to the islandora_solr_serch_settings_variables() array.
  */
 function islandora_solr_uninstall() {
-
   // Removing variables.
   $variables = array_merge(islandora_solr_search_settings_variables(), array(
     'islandora_solr_url',
@@ -61,6 +60,10 @@ function islandora_solr_uninstall() {
     'islandora_solr_search_field_value_separator',
     'islandora_solr_search_truncated_field_value_separator',
     'islandora_solr_collection_result_limit_block_override',
+    'islandora_solr_breadcrumbs_parent_fields',
+    'islandora_solr_breadcrumbs_add_collection_query',
+    'islandora_solr_simple_search_label_visibility',
+    'islandora_solr_simple_search_label_title',
   ));
   array_walk($variables, 'variable_del');
 }
@@ -294,6 +297,8 @@ function islandora_solr_update_7002() {
  */
 function islandora_solr_search_settings_variables() {
   $variables = array(
+    'islandora_solr_advanced_search_block_lucene_syntax_escape',
+    'islandora_solr_advanced_search_block_lucene_regex_default',
     'islandora_solr_result_fields',
     'islandora_solr_limit_result_fields',
     'islandora_solr_num_of_results',

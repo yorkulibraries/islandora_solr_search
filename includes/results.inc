@@ -204,7 +204,8 @@ class IslandoraSolrResults {
     // Get query values.
     if (!in_array($islandora_solr_query->solrQuery, $islandora_solr_query->differentKindsOfNothing)) {
       // Get query value.
-      $query_value = $islandora_solr_query->solrQuery;
+      $query_value = stripslashes($islandora_solr_query->solrQuery);
+
       $query_list = array();
       if (variable_get('islandora_solr_human_friendly_query_block', TRUE)) {
         foreach ($this->searchFieldArray as $search_field => $search_field_label) {
@@ -319,14 +320,29 @@ class IslandoraSolrResults {
   /**
    * Sets the Drupal breadcrumbs.
    *
-   * Sets the Drupal breadcrumbs based on the current query and filters.
+   * @param IslandoraSolrQueryProcessor $islandora_solr_query
+   *   The IslandoraSolrQueryProcessor object, which includes the current query
+   *   settings and the raw Solr results.
+   */
+  public function setBreadcrumbs($islandora_solr_query) {
+    $breadcrumb = $this->getBreadcrumbs($islandora_solr_query);
+    drupal_set_breadcrumb($breadcrumb);
+  }
+
+  /**
+   * Gets the Drupal breadcrumbs.
+   *
+   * Gets the Drupal breadcrumbs based on the current query and filters.
    * Provides links to exclude the query or filters.
    *
    * @param IslandoraSolrQueryProcessor $islandora_solr_query
    *   The IslandoraSolrQueryProcessor object which includes the current query
    *   settings and the raw Solr results.
+   *
+   * @return array
+   *   An array of breadcrumbs.
    */
-  public function setBreadcrumbs($islandora_solr_query) {
+  public function getBreadcrumbs($islandora_solr_query) {
     // $_GET['q'] didn't seem to work here.
     $path = current_path();
     // Get date format.
@@ -473,7 +489,7 @@ class IslandoraSolrResults {
     }
     $context = 'solr';
     drupal_alter('islandora_breadcrumbs', $breadcrumb, $context);
-    drupal_set_breadcrumb($breadcrumb);
+    return $breadcrumb;
   }
 
   /**
@@ -938,6 +954,35 @@ class IslandoraSolrFacets {
     $soft_limit = self::$soft_limit;
     $buckets = array();
     $replace_bucket = (isset($this->settings['solr_field_settings']['pid_object_label']) && $this->settings['solr_field_settings']['pid_object_label'] ? TRUE : FALSE);
+    $pid_mapper = function ($result) {
+      $pid = str_replace('info:fedora/', '', $result['bucket']);
+      return $pid;
+    };
+    $labels = array();
+    if ($replace_bucket) {
+      $valid_pids = array_filter(array_map($pid_mapper, $results), 'islandora_is_valid_pid');
+      $mapping = array();
+      foreach ($valid_pids as $valid_pid) {
+        $mapping[$valid_pid] = "\"{$valid_pid}\"";
+      }
+      if (!empty($mapping)) {
+        $qp = new IslandoraSolrQueryProcessor();
+        $qp->buildQuery(format_string('PID:(!pids)', array(
+          '!pids' => implode(' OR ', $mapping),
+        )));
+        $label_field = variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+        $qp->solrParams['facet'] = 'false';
+        $qp->solrParams['fl'] = "PID, $label_field";
+        $qp->solrLimit = count($mapping);
+        $qp->executeQuery(FALSE, TRUE);
+        $labels = array();
+        if ($qp->islandoraSolrResult['response']['numFound'] > 0) {
+          foreach ($qp->islandoraSolrResult['response']['objects'] as $doc) {
+            $labels[$doc['PID']] = $doc['object_label'];
+          }
+        }
+      }
+    }
     foreach ($results as $key => $values) {
       $bucket = $values['bucket'];
       $filter = $values['filter'];
@@ -945,26 +990,27 @@ class IslandoraSolrFacets {
 
       // Replace link bucket with object label based on facet field settings.
       if ($replace_bucket) {
-        $query_processor = new IslandoraSolrQueryProcessor();
         $label = NULL;
-        $pid = str_replace('info:fedora/', '', $bucket);
-        if (islandora_is_valid_pid($pid)) {
-          $query_processor->buildQuery("PID:\"$pid\"");
-          $query_processor->solrParams['fl'] = 'PID, ' . variable_get('islandora_solr_object_label_field', 'fgs_label_s');
-          $query_processor->executeQuery();
-          if (!empty($query_processor->islandoraSolrResult) && !empty($query_processor->islandoraSolrResult['response']['objects'])) {
-            $label = (!empty($query_processor->islandoraSolrResult['response']['objects'][0]['object_label']) ?
-            $query_processor->islandoraSolrResult['response']['objects'][0]['object_label'] : NULL);
-          }
-          // Fall back to islandora object if PID is not in solr.
-          // eg: content models.
-          else {
-            if ($object = islandora_object_load($pid)) {
-              $label = $object->label;
-            }
+        $pid = $pid_mapper($values);
+        if (isset($labels[$pid])) {
+          $label = $labels[$pid];
+        }
+        // Fall back to islandora object if PID is not in solr.
+        // eg: content models.
+        else {
+          if ($object = islandora_object_load($pid)) {
+            $label = $object->label;
           }
         }
         $bucket = ($label ? $label : $bucket);
+      }
+
+      // Replace labels for boolean values if necessary.
+      if ($bucket == 'true' && isset($this->settings['solr_field_settings']['boolean_facet_true_replacement']) && !empty($this->settings['solr_field_settings']['boolean_facet_true_replacement'])) {
+        $bucket = $this->settings['solr_field_settings']['boolean_facet_true_replacement'];
+      }
+      if ($bucket == 'false' && isset($this->settings['solr_field_settings']['boolean_facet_false_replacement']) && !empty($this->settings['solr_field_settings']['boolean_facet_false_replacement'])) {
+        $bucket = $this->settings['solr_field_settings']['boolean_facet_false_replacement'];
       }
 
       // Current URL query.

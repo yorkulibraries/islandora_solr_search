@@ -29,7 +29,7 @@ function islandora_solr_manage_collection_sort_form(array $form, array &$form_st
     'collection_sort_string' => array(
       '#type' => 'textfield',
       '#title' => t('Solr Collection Sort String'),
-      '#description' => t('One or more non-multivalued Solr fields to sort by when using the Solr collection query backend. If set to empty, this collection will to fall back to the global sort settings in the order listed below.</br>Global Collection Sort: %collection_sort</br>Global Base Sort: %base_sort</br>', array(
+      '#description' => t('One or more non-multivalued Solr fields to sort by when using the Solr collection query backend (by convention, multivalued fields have names that contain "_m" plus another letter at the end of their Solr names). Add " asc" or " desc" to each fieldname. If this setting is empty, this collection will to fall back to the global sort settings in the order listed below.</br>Global Collection Sort: %collection_sort</br>Global Base Sort: %base_sort</br>', array(
         '%collection_sort' => empty($collection_sort) ? t("Not set") : $collection_sort,
         '%base_sort' => empty($base_sort) ? t("Not set") : $base_sort,
       )),
