@@ -474,9 +474,6 @@ function islandora_solr_simple_search_form($form, &$form_state) {
   $form['simple']["islandora_simple_search_query"] = array(
     '#size' => '14',
     '#type' => 'textfield',
-    '#title' => check_plain($title_label),
-    '#title_display' => $title_visible,
-    // @todo Should this be the searched value?
     '#default_value' => '',
     '#attributes' => array(
       'placeholder' => t('Search...'),
