@@ -172,7 +172,7 @@ class IslandoraSolrQueryProcessor {
     }
 
     // Get pager variable.
-    $start_page = isset($_GET['page']) ? $_GET['page'] : 0;
+    $start_page = isset($_GET['page']) ? $_GET['page'] : isset($params['start']) ? $params['start'] : 0;
 
     // Set results limit.
     $this->solrLimit = isset($this->internalSolrParams['limit']) ? $this->internalSolrParams['limit'] : variable_get('islandora_solr_num_of_results', 20);
@@ -202,6 +202,7 @@ class IslandoraSolrQueryProcessor {
     if (!empty($facet_dates)) {
       // Set range/date variables.
       $params_date_facets = array();
+      $facet_dates = array_filter($facet_dates, function($o){ islandora_solr_is_date_field($o);}, ARRAY_FILTER_USE_KEY);
       foreach ($facet_dates as $key => $value) {
         $field = $value['solr_field'];
         $start = $value['solr_field_settings']['range_facet_start'];
@@ -236,9 +237,6 @@ class IslandoraSolrQueryProcessor {
       $params_date_facets["facet.date.start"] = 'NOW/YEAR-20YEARS';
       $params_date_facets["facet.date.end"] = 'NOW';
       $params_date_facets["facet.date.gap"] = '+1YEAR';
-      $params_date_facets["facet.range.start"] = 'NOW/YEAR-20YEARS';
-      $params_date_facets["facet.range.end"] = 'NOW';
-      $params_date_facets["facet.range.gap"] = '+1YEAR';
 
       $params_array = array_merge($params_array, $params_date_facets);
     }
