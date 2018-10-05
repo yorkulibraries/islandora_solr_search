@@ -669,6 +669,14 @@ class IslandoraSolrFacets {
   public $title = NULL;
   public $content = NULL;
 
+  /**
+   * Is this a range on a Solr date field?
+   *
+   * @var bool
+   *   Whether it is.
+   */
+  private $date_range = FALSE;
+
 
   // @codingStandardsIgnoreEnd
 
@@ -769,6 +777,7 @@ class IslandoraSolrFacets {
     }
     if (array_key_exists($facet_field, self::$facet_ranges)) {
       $this->facet_type = 'facet_ranges';
+      $this->date_range = islandora_solr_is_date_field($facet_field);
     }
   }
 
@@ -803,7 +812,8 @@ class IslandoraSolrFacets {
     if ($facet_type == 'facet_fields') {
       $this->processFacetFields();
     }
-    if ($facet_type == 'facet_dates') {
+    if ($facet_type == 'facet_dates'
+      || ($facet_type == 'facet_ranges' && $this->date_range)) {
       $this->processFacetDates();
     }
     if ($facet_type == 'facet_ranges') {
@@ -867,7 +877,7 @@ class IslandoraSolrFacets {
    * to handle differences between date and range fields.
    */
   public function processFacetRanges() {
-    $this->processFacetDates();
+
   }
 
   /**
