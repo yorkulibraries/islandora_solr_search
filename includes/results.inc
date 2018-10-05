@@ -871,10 +871,7 @@ class IslandoraSolrFacets {
   }
 
   /**
-   * Process facet ranges.
-   *
-   * Based on the existing implementation for date fields, but modified in place
-   * to handle differences between date and range fields.
+   * Not in place yet.
    */
   public function processFacetRanges() {
 
