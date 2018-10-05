@@ -871,6 +871,8 @@ class IslandoraSolrFacets {
   }
 
   /**
+   * Process facet ranges.
+   *
    * Not in place yet.
    */
   public function processFacetRanges() {
