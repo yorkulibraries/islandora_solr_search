@@ -699,7 +699,6 @@ class IslandoraSolrFacets {
     self::$facet_fields = isset($islandora_solr_query->islandoraSolrResult) ? $islandora_solr_query->islandoraSolrResult['facet_counts']['facet_fields'] : array();
     // XXX: isset() checking, as newer Solrs (7) won't return a value.
     self::$facet_dates = isset($islandora_solr_query->islandoraSolrResult['facet_counts']['facet_dates']) ? $islandora_solr_query->islandoraSolrResult['facet_counts']['facet_dates'] : array();
-    // Not in place yet.
     // XXX: isset() checking, as older Solrs (before 3.1) won't return a value.
     self::$facet_ranges = isset($islandora_solr_query->islandoraSolrResult['facet_counts']['facet_ranges']) ?
       $islandora_solr_query->islandoraSolrResult['facet_counts']['facet_ranges'] :
