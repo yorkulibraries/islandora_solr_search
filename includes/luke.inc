@@ -245,13 +245,11 @@ function islandora_solr_get_type_class($solr_type) {
  * @return array|bool
  *   The version array or FALSE if can't be determined.
  *
- * Version array has structure:
- *  array(
+ * Version array has keys:
  *    'version' => 'string of version'.
  *    'major' => first digit (if parseable),
  *    'minor' => second digit (if applicable),
  *    'patch' => third digit (if applicable)
- *  );
  *
  *  Only version is guaranteed to be returned on a successful request.
  */

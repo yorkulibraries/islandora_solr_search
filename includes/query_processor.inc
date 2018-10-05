@@ -223,7 +223,7 @@ class IslandoraSolrQueryProcessor {
     if (!empty($facet_dates_ranges)) {
       // Set range/date variables.
       $params_date_facets = array();
-      $facet_dates = array_filter($facet_dates_ranges, function($o){
+      $facet_dates = array_filter($facet_dates_ranges, function($o) {
         return islandora_solr_is_date_field($o['solr_field']);
       });
       foreach ($facet_dates_ranges as $key => $value) {
