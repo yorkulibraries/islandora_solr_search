@@ -38,6 +38,8 @@ class IslandoraSolrQueryProcessor {
     '',
   );
 
+  private $solrVersion;
+
   /**
    * Handle deprectation of old class member gracefully.
    */
@@ -63,6 +65,25 @@ class IslandoraSolrQueryProcessor {
 
       return $this->$new_name;
     }
+  }
+
+  /**
+   * IslandoraSolrQueryProcessor constructor.
+   */
+  public function __construct() {
+    $this->solrVersion = islandora_solr_get_solr_version();
+  }
+
+  /**
+   * Solr removed Date faceting version 6.
+   *
+   * @return bool
+   *   Whether we know your Solr version and its below 6.
+   */
+  private function solrHasDateFacets() {
+    return ($this->solrVersion === FALSE
+      || (isset($this->solrVersion['major'])
+      && $this->solrVersion['major'] < 6));
   }
 
   /**
@@ -198,31 +219,62 @@ class IslandoraSolrQueryProcessor {
     }
 
     // Check for date facets.
-    $facet_dates = islandora_solr_get_range_facets();
-    if (!empty($facet_dates)) {
+    $facet_dates_ranges = islandora_solr_get_range_facets();
+    if (!empty($facet_dates_ranges)) {
       // Set range/date variables.
       $params_date_facets = array();
-      $facet_dates = array_filter($facet_dates, function($o){ islandora_solr_is_date_field($o);}, ARRAY_FILTER_USE_KEY);
-      foreach ($facet_dates as $key => $value) {
+      $facet_dates = array_filter($facet_dates_ranges, function($o){
+        return islandora_solr_is_date_field($o['solr_field']);
+      });
+      foreach ($facet_dates_ranges as $key => $value) {
         $field = $value['solr_field'];
         $start = $value['solr_field_settings']['range_facet_start'];
         $end = $value['solr_field_settings']['range_facet_end'];
         $gap = $value['solr_field_settings']['range_facet_gap'];
-        // Add date and range facet to support both old and new facets.
-        $params_date_facets["facet.date"][] = $field;
-        $params_date_facets["facet.range"][] = $field;
-        // Custom field settings.
-        if ($start) {
+        if ($this->solrHasDateFacets()) {
+          // < Solr 6 or we don't know.
+          $params_date_facets["facet.date"][] = $field;
           $params_date_facets["f.{$field}.facet.date.start"] = $start;
-          $params_date_facets["f.{$field}.facet.range.start"] = $start;
+          // Custom field settings.
+          if ($start) {
+            $params_date_facets["f.{$field}.facet.date.start"] = $start;
+          }
+          if ($end) {
+            $params_date_facets["f.{$field}.facet.date.end"] = $end;
+          }
+          if ($gap) {
+            $params_date_facets["f.{$field}.facet.date.gap"] = $gap;
+          }
+          // Default settings.
+          $params_date_facets["facet.date.start"] = 'NOW/YEAR-20YEARS';
+          $params_date_facets["facet.date.end"] = 'NOW';
+          $params_date_facets["facet.date.gap"] = '+1YEAR';
         }
-        if ($end) {
-          $params_date_facets["f.{$field}.facet.date.end"] = $end;
-          $params_date_facets["f.{$field}.facet.range.end"] = $end;
-        }
-        if ($gap) {
-          $params_date_facets["f.{$field}.facet.date.gap"] = $gap;
-          $params_date_facets["f.{$field}.facet.range.gap"] = $gap;
+        else {
+          // No more date facets.
+          $params_date_facets["facet.range"][] = $field;
+          if (in_array($field, $facet_dates)) {
+            // Use date defaults for date solr fields.
+            // TODO: Maybe these should be removed and left to the config form.
+            if (!$start) {
+              $start = 'NOW/YEAR-20YEARS';
+            }
+            if (!$end) {
+              $end = 'NOW';
+            }
+            if (!$gap) {
+              $gap = '+1YEAR';
+            }
+          }
+          if ($start) {
+            $params_date_facets["f.{$field}.facet.range.start"] = $start;
+          }
+          if ($end) {
+            $params_date_facets["f.{$field}.facet.range.end"] = $end;
+          }
+          if ($gap) {
+            $params_date_facets["f.{$field}.facet.range.gap"] = $gap;
+          }
         }
         // When the range slider is enabled we always want to return empty
         // values.
@@ -233,10 +285,6 @@ class IslandoraSolrQueryProcessor {
         $pos = array_search($field, $params_array['facet.field']);
         unset($params_array['facet.field'][$pos]);
       }
-      // Default settings.
-      $params_date_facets["facet.date.start"] = 'NOW/YEAR-20YEARS';
-      $params_date_facets["facet.date.end"] = 'NOW';
-      $params_date_facets["facet.date.gap"] = '+1YEAR';
 
       $params_array = array_merge($params_array, $params_date_facets);
     }
