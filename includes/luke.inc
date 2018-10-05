@@ -267,9 +267,9 @@ function islandora_solr_get_solr_version($reset = FALSE) {
         $solr_url = implode('/', $parts);
         $admin_url = $solr_url . '/admin/info/system';
         $admin_url = islandora_solr_check_http($admin_url);
-        // Need to set a timeout greater than the default 30 seconds as some indexes
-        // could contain a lot of fields and the Luke needs longer to respond in
-        // kind.
+        // Need to set a timeout greater than the default 30 seconds as some
+        // indexescould contain a lot of fields and the Luke needs longer to
+        // respond in kind.
         $timeout = variable_get('islandora_solr_luke_timeout', '45');
         $admin_url = url($admin_url, array(
           'absolute' => TRUE,
