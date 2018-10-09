@@ -38,7 +38,7 @@ class IslandoraSolrQueryProcessor {
     '',
   );
 
-  private $solrVersion;
+  protected $solrVersion;
 
   /**
    * Handle deprectation of old class member gracefully.
@@ -80,7 +80,7 @@ class IslandoraSolrQueryProcessor {
    * @return bool
    *   Whether we know your Solr version and its below 6.
    */
-  private function solrHasDateFacets() {
+  protected function solrHasDateFacets() {
     return ($this->solrVersion === FALSE
       || (isset($this->solrVersion['major'])
       && $this->solrVersion['major'] < 6));

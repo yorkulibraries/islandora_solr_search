@@ -675,7 +675,7 @@ class IslandoraSolrFacets {
    * @var bool
    *   Whether it is.
    */
-  private $date_range = FALSE;
+  protected $date_range = FALSE;
 
 
   // @codingStandardsIgnoreEnd
