@@ -193,7 +193,7 @@ class IslandoraSolrQueryProcessor {
     }
 
     // Get pager variable.
-    $start_page = isset($_GET['page']) ? $_GET['page'] : isset($params['start']) ? $params['start'] : 0;
+    $start_page = isset($_GET['page']) ? $_GET['page'] : (isset($params['start']) ? $params['start'] : 0);
 
     // Set results limit.
     $this->solrLimit = isset($this->internalSolrParams['limit']) ? $this->internalSolrParams['limit'] : variable_get('islandora_solr_num_of_results', 20);
