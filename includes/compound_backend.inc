@@ -85,7 +85,7 @@ function islandora_solr_compound_object_query($pid) {
   $solr_build->solrParams['facet'] = $solr_build->solrParams['hl'] = 'false';
   $solr_build->solrParams = islandora_solr_clean_compound_filters($solr_build->solrParams);
 
-  // Loop in case there are lots
+  // Loop in case there are lots.
   do {
     $start += 1;
     $solr_build->solrStart = $start * $rows;
@@ -105,7 +105,7 @@ function islandora_solr_compound_object_query($pid) {
   } while ($total > (($start * $rows) + $rows));
 
   if (count($constituents) > 0) {
-   $sort = function($a, $b) use($sequence_pattern) {
+    $sort = function($a, $b) use($sequence_pattern) {
       $a = $a['solr_doc'][$sequence_pattern];
       if (is_array($a)) {
         $a = reset($a);
