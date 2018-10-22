@@ -99,6 +99,17 @@ function islandora_solr_menu() {
     'file' => 'includes/admin.inc',
     'type' => MENU_CALLBACK,
   );
+  if (module_exists('islandora_compound_object')) {
+    $items['admin/islandora/solution_pack_config/compound_object/solr'] = array(
+      'title' => 'Solr Backend',
+      'description' => 'Settings form for compound object backend',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('islandora_solr_compound_backend_admin_form'),
+      'access arguments' => array('administer compound relationships'),
+      'file' => 'includes/compound_backend.inc',
+      'type' => MENU_LOCAL_TASK,
+    );
+  }
   return $items;
 }
 
@@ -496,6 +507,22 @@ function islandora_solr_islandora_basic_collection_query_backends() {
       'title' => t('Solr'),
       'callable' => 'islandora_solr_islandora_basic_collection_backend_callable',
       'file' => "$module_path/includes/utilities.inc",
+    ),
+  );
+}
+
+/**
+ * Implements hook_islandora_compound_object_query_backends().
+ */
+function islandora_solr_islandora_compound_object_query_backends() {
+  $module_path = drupal_get_path('module', 'islandora_solr');
+  return array(
+    'islandora_solr_compound_query_backend' => array(
+      'title' => t('SOLR - Does a Solr query with filters. Configure fields on the <a href="@solr">Solr Backend</a> tab.',
+        array('@solr' => url('admin/islandora/solution_pack_config/compound_object/solr'))
+      ),
+      'callable' => 'islandora_solr_compound_object_query',
+      'file' => "$module_path/includes/compound_backend.inc",
     ),
   );
 }
