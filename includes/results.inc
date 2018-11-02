@@ -635,7 +635,7 @@ class IslandoraSolrResults {
    */
   public function prepFieldSubstitutions() {
 
-    $facet_fields =  $this->facetFieldSettings = islandora_solr_get_fields('facet_fields', TRUE, FALSE, TRUE);
+    $facet_fields = $this->facetFieldSettings = islandora_solr_get_fields('facet_fields', TRUE, FALSE, TRUE);
 
     $this->facetFieldArray = _islandora_solr_simplify_fields($facet_fields);
 
@@ -645,6 +645,7 @@ class IslandoraSolrResults {
 
     $this->allSubsArray = array_merge($this->facetFieldArray, $this->searchFieldArray, $this->resultFieldArray);
   }
+
 }
 
 /**
