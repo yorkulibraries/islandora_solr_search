@@ -458,6 +458,7 @@ function islandora_solr_simple_search_form($form, &$form_state) {
     '#attributes' => array(
       'class' => array(
         'container-inline',
+        'text-right',
       ),
     ),
   );
@@ -472,7 +473,6 @@ function islandora_solr_simple_search_form($form, &$form_state) {
   $title_label = variable_get('islandora_solr_simple_search_label_title', 'Search Term');
 
   $form['simple']["islandora_simple_search_query"] = array(
-    '#size' => '14',
     '#type' => 'textfield',
     '#default_value' => '',
     '#attributes' => array(
